@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS `user` (
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- 3. 게시글 상태 테이블 (미리 데이터까지 삽입해 둡니다)
+-- 3. 게시글 상태 테이블
 CREATE TABLE IF NOT EXISTS `post_status` (
     `status_id` INT AUTO_INCREMENT PRIMARY KEY,
     `status_name` VARCHAR(50) NOT NULL
