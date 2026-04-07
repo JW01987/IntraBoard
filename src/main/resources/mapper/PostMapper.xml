@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.company.board.mapper.PostMapper">
+
+    <insert id="save" useGeneratedKeys="true" keyProperty="postId">
+        INSERT INTO post (user_id, status_id, title, content)
+        VALUES (#{userId}, #{statusId}, #{title}, #{content})
+    </insert>
+
+    <!-- 읽어올 땐 is_deleted가 false(0)인 살아있는 글만 -->
+    <select id="findById" resultType="Post">
+        SELECT * FROM post
+        WHERE post_id = #{postId} AND is_deleted = false
+    </select>
+
+    <!-- 
+        다이나믹 쿼리 / 동적 쿼리
+        <if> 태그를 이용해 프론트엔드가 보낸 값(keyword, statusId 등)이 있을 때만 문자열을 추가
+        <choose> <when> <otherwise> : if문과 같은 역할을 하지만 더 가독성이 좋음
+        <foreach> :for-each문과 같은 역할을 함
+        <set> : update할 때 콤마(,)를 자동으로 처리해줌 
+    -->
+    <select id="findAll" resultType="Post">
+        SELECT * FROM post
+        WHERE is_deleted = false
+        <!-- keyword가 null이 아니고 빈 문자열이 아니면 -->
+        <if test="keyword != null and keyword != ''">
+            AND title LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+        <!-- statusId가 null이 아니면 -->
+        <if test="statusId != null">
+            AND status_id = #{statusId}
+        </if>   
+        <!-- startDate가 null이 아니면 -->
+        <if test="startDate != null">
+            AND created_at >= #{startDate}
+        </if>
+        <!-- endDate가 null이 아니면 -->
+        <if test="endDate != null">
+            <!-- 10일까지 검색했으면 10일 23:59:59까지 포함하기 위해 +1일 미만으로 계산 -->
+            AND created_at &lt; DATE_ADD(#{endDate}, INTERVAL 1 DAY) 
+        </if>
+        
+        ORDER BY post_id DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="countAll" resultType="int">
+        SELECT COUNT(*) FROM post
+        WHERE is_deleted = false
+        
+        <if test="keyword != null and keyword != ''">
+            AND title LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+        <if test="statusId != null">
+            AND status_id = #{statusId}
+        </if>
+        <if test="startDate != null">
+            AND created_at >= #{startDate}
+        </if>
+        <if test="endDate != null">
+            AND created_at &lt; DATE_ADD(#{endDate}, INTERVAL 1 DAY)
+        </if>
+    </select>
+
+    <update id="update">
+        UPDATE post
+        SET status_id = #{statusId},
+            title = #{title},
+            content = #{content}
+        WHERE post_id = #{postId}
+    </update>
+
+    <!-- is_deleted 플래그만 true로 처리 -->
+    <update id="deleteById">
+        UPDATE post
+        SET is_deleted = true
+        WHERE post_id = #{postId}
+    </update>
+
+    <update id="increaseViewCount">
+        UPDATE post
+        SET view_count = view_count + 1
+        WHERE post_id = #{postId}
+    </update>
+
+</mapper>
