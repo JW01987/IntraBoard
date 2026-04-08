@@ -37,7 +37,7 @@ public class PostService {
         pageResult.put("totalCount", totalCount);
         pageResult.put("currentPage", searchDto.getPage());
         
-        // ✨ 총 페이지 수 계산: (총 갯수 / 한 페이지당 갯수) 후 무조건 올림! 
+        // 총 페이지 수 계산: (총 갯수 / 한 페이지당 갯수) 후 올림
         // 예: 21개면 3쪽이어야 함. Math.ceil(21 / 10.0) = 3
         pageResult.put("totalPages", (int) Math.ceil((double) totalCount / searchDto.getSize()));
 

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.company.board.mapper.CommentMapper">
+
+    <!-- 
+      일반 댓글: parentId = null
+      대댓글: 부모의 id를 parentId에 담아서 보냄
+    -->
+    <insert id="save" useGeneratedKeys="true" keyProperty="commentId">
+        INSERT INTO comment (post_id, user_id, parent_id, content)
+        VALUES (#{postId}, #{userId}, #{parentId}, #{content})
+    </insert>
+
+    <!-- 
+      COALESCE(parent_id, comment_id): 
+      부모 ID가 NULL이면 자기 자신의 ID를 씀
+      같은 부모ID를 가진 댓글이 묶이고 시간순으로 정렬됨
+    -->
+    <select id="findByPostId" resultType="Comment">
+        SELECT * FROM comment
+        WHERE post_id = #{postId}
+        ORDER BY COALESCE(parent_id, comment_id) ASC, comment_id ASC
+    </select>
+
+    <select id="findById" resultType="Comment">
+        SELECT * FROM comment WHERE comment_id = #{commentId}
+    </select>
+
+    <update id="update">
+        UPDATE comment
+        SET content = #{content}
+        WHERE comment_id = #{commentId} AND is_deleted = false
+    </update>
+    
+    <update id="deleteById">
+        UPDATE comment
+        SET is_deleted = true
+        WHERE comment_id = #{commentId}
+    </update>
+
+</mapper>
