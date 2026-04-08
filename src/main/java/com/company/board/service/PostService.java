@@ -37,6 +37,11 @@ public class PostService {
         return postMapper.findById(postId);
     }
 
+    // 2-1. 내부 검증 및 수정용 조회 (조회수 증가 방지)
+    public Post getPostBasic(Long postId) {
+        return postMapper.findById(postId);
+    }
+
     // 3. 목록 검색 및 페이징 종합 처리
     public Map<String, Object> getPostList(PostSearchDto searchDto) {
         List<Post> list = postMapper.findAll(searchDto); // 1. 데이터 목록 가져오기

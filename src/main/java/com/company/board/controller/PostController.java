@@ -38,14 +38,8 @@ public class PostController {
     // 3. 게시글 작성
     @PostMapping
     public ResponseEntity<ApiResponse<Void>> createPost(@RequestBody Post post, HttpServletRequest request) {
-        // 세션 검증
-        HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("LOGIN_USER") == null) {
-            return ResponseEntity.status(401).body(ApiResponse.error("로그인이 필요합니다."));
-        }
-
-        // 로그인한 유저만 통과! 내 정보 꺼내기
-        User loginUser = (User) session.getAttribute("LOGIN_USER");
+        // 내 정보 꺼내기 (인터셉터를 통과했으므로 무조건 세션과 회원정보가 존재함)
+        User loginUser = (User) request.getSession(false).getAttribute("LOGIN_USER");
         
         // 프론트엔드가 혹시 userId를 조작해서 보낼 수도 있으니, 무시하고 서버 세션에 있는 내 ID로 강제로 덮어씌웁니다. (보안)
         post.setUserId(loginUser.getUserId()); 
@@ -61,7 +55,15 @@ public class PostController {
 
     // 4. 게시글 수정
     @PutMapping("/{postId}")
-    public ResponseEntity<ApiResponse<Void>> updatePost(@PathVariable("postId") Long postId, @RequestBody Post post) {
+    public ResponseEntity<ApiResponse<Void>> updatePost(@PathVariable("postId") Long postId, @RequestBody Post post, HttpServletRequest request) {
+        // [권한 검증] 관리자이거나 원글 작성자인지 확인
+        Post target = postService.getPostBasic(postId);
+        User loginUser = (User) request.getSession(false).getAttribute("LOGIN_USER");
+
+        if (!target.getUserId().equals(loginUser.getUserId()) && loginUser.getRole() != 1) {
+            return ResponseEntity.status(403).body(ApiResponse.error("수정 권한이 없습니다."));
+        }
+
         post.setPostId(postId);
         postService.updatePost(post);
         return ResponseEntity.ok(ApiResponse.success("게시글 수정 완료"));
@@ -69,7 +71,15 @@ public class PostController {
 
     // 5. 게시글 삭제 (소프트 딜리트 상태 처리)
     @DeleteMapping("/{postId}")
-    public ResponseEntity<ApiResponse<Void>> deletePost(@PathVariable("postId") Long postId) {
+    public ResponseEntity<ApiResponse<Void>> deletePost(@PathVariable("postId") Long postId, HttpServletRequest request) {
+        // [권한 검증] 관리자이거나 원글 작성자인지 확인
+        Post target = postService.getPostBasic(postId);
+        User loginUser = (User) request.getSession(false).getAttribute("LOGIN_USER");
+
+        if (!target.getUserId().equals(loginUser.getUserId()) && loginUser.getRole() != 1) {
+            return ResponseEntity.status(403).body(ApiResponse.error("삭제 권한이 없습니다."));
+        }
+
         postService.deletePost(postId);
         return ResponseEntity.ok(ApiResponse.success("게시글이 삭제되었습니다."));
     }
