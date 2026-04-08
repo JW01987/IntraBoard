@@ -2,6 +2,8 @@ package com.company.board.service;
 
 import com.company.board.domain.Post;
 import com.company.board.domain.PostSearchDto;
+import com.company.board.domain.PostFile;
+import com.company.board.mapper.PostFileMapper;
 import com.company.board.mapper.PostMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,13 +17,21 @@ import java.util.Map;
 public class PostService {
 
     private final PostMapper postMapper;
+    private final PostFileMapper postFileMapper;
 
     // 1. 게시글 작성
     public void createPost(Post post) {
         postMapper.save(post);
+
+        if (post.getFiles() != null && !post.getFiles().isEmpty()) {
+            for (PostFile file : post.getFiles()) {
+                file.setPostId(post.getPostId()); 
+                postFileMapper.save(file);
+            }
+        }
     }
 
-    // 2. 게시글 상세 보기 (조회수 1 증가시키고 조회해옴)
+    // 2. 게시글 상세 보기 (조회수 1 증가시키고 조회)
     public Post getPostDetail(Long postId) {
         postMapper.increaseViewCount(postId);
         return postMapper.findById(postId);

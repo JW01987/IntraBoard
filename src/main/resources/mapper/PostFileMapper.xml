@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.company.board.mapper.PostFileMapper">
+
+    <insert id="save">
+        INSERT INTO post_file (post_id, original_name, saved_name, file_size)
+        VALUES (#{postId}, #{originalName}, #{savedName}, #{fileSize})
+    </insert>
+
+    <!-- 게시글 조회시 파일 불러오기 -->
+    <select id="findByPostId" resultType="PostFile">
+        SELECT * FROM post_file WHERE post_id = #{postId}
+    </select>
+    
+    <delete id="deleteById">
+        DELETE FROM post_file WHERE file_id = #{fileId}
+    </delete>
+
+</mapper>

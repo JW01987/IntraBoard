@@ -16,4 +16,5 @@ public class Post {
     private Boolean isDeleted;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private List<PostFile> files;
 }
