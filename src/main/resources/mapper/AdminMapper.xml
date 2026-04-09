@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.company.board.mapper.AdminMapper">
+
+    <select id="getPostStatusStats" resultType="map">
+        SELECT s.status_name as statusName, COUNT(p.post_id) as count
+        FROM post_status s
+        LEFT JOIN post p ON s.status_id = p.status_id AND p.is_deleted = false
+        GROUP BY s.status_id, s.status_name
+    </select>
+
+    <select id="getPostPriorityStats" resultType="map">
+        SELECT 
+            CASE priority 
+                WHEN 1 THEN '낮음' 
+                WHEN 2 THEN '보통' 
+                WHEN 3 THEN '높음' 
+                WHEN 4 THEN '긴급' 
+            END as priorityName, 
+            COUNT(*) as count
+        FROM post
+        WHERE is_deleted = false
+        GROUP BY priority
+    </select>
+
+    <select id="getPostCategoryStats" resultType="map">
+        SELECT c.category_name as categoryName, COUNT(p.post_id) as count
+        FROM post_category c
+        LEFT JOIN post p ON c.category_id = p.category_id AND p.is_deleted = false
+        GROUP BY c.category_id, c.category_name
+    </select>
+
+</mapper>

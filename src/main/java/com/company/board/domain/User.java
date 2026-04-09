@@ -11,7 +11,11 @@ public class User {
     private String loginId;
     private String password;
     private String name;
-    private String companyName; // 소속 회사명
-    private Integer role;
+    private Long companyId; // 관계형 조인 (외래키)
+    private Integer role; // 1: 슈퍼관리자(어드민), 2: 일반회원
+
+    // JOIN 전용 데이터
+    private String companyName; // JOIN 시 가져올 회사명
+    private Integer companyType; // JOIN 시 가져올 회사 분류 (1: 본사, 2: 고객사)
     private LocalDateTime createdAt;
 }

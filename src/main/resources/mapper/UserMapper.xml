@@ -12,22 +12,24 @@
         #{ ... } = 자동 매핑(파라미터 바인딩) != ${ } 백틱이랑 다름
     -->
     <insert id="save" useGeneratedKeys="true" keyProperty="userId">
-        INSERT INTO user (login_id, password, name, company_name, role)
-        VALUES (#{loginId}, #{password}, #{name}, #{companyName}, #{role})
+        INSERT INTO user (login_id, password, name, company_id, role)
+        VALUES (#{loginId}, #{password}, #{name}, #{companyId}, #{role})
     </insert>
 
     <!-- 2. 로그인 아이디로 회원 찾기 -->
     <select id="findByLoginId" resultType="User">
-        SELECT * 
-        FROM user 
-        WHERE login_id = #{loginId}
+        SELECT u.*, c.company_name as companyName, c.company_type as companyType
+        FROM user u
+        JOIN company c ON u.company_id = c.company_id
+        WHERE u.login_id = #{loginId}
     </select>
 
     <!-- 3. 고유 식별 번호로 회원 찾기 -->
     <select id="findById" resultType="User">
-        SELECT * 
-        FROM user 
-        WHERE user_id = #{userId}
+        SELECT u.*, c.company_name as companyName, c.company_type as companyType
+        FROM user u
+        JOIN company c ON u.company_id = c.company_id
+        WHERE u.user_id = #{userId}
     </select>
 
     <!-- 
@@ -36,9 +38,10 @@
         Flutter와는 다름
     -->
     <select id="findAll" resultType="User">
-        SELECT * 
-        FROM user 
-        ORDER BY user_id DESC
+        SELECT u.*, c.company_name as companyName, c.company_type as companyType
+        FROM user u
+        JOIN company c ON u.company_id = c.company_id
+        ORDER BY u.user_id DESC
     </select>
 
     <!-- 5. 유저 권한 수정 (관리자 전용) -->

@@ -10,16 +10,18 @@
     </insert>
 
     <select id="findById" resultType="Notice">
-        SELECT n.*, u.name as authorName, u.company_name as authorCompany
+        SELECT n.*, u.name as authorName, c.company_name as authorCompany
         FROM notice n
         JOIN user u ON n.user_id = u.user_id
+        JOIN company c ON u.company_id = c.company_id
         WHERE n.notice_id = #{noticeId}
     </select>
 
     <select id="findAll" resultType="Notice">
-        SELECT n.*, u.name as authorName, u.company_name as authorCompany
+        SELECT n.*, u.name as authorName, c.company_name as authorCompany
         FROM notice n
         JOIN user u ON n.user_id = u.user_id
+        JOIN company c ON u.company_id = c.company_id
         ORDER BY n.notice_id DESC
     </select>
 

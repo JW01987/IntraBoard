@@ -43,9 +43,15 @@ public class PostController {
         // 프론트엔드가 혹시 userId를 조작해서 보낼 수도 있으니, 무시하고 서버 세션에 있는 내 ID로 강제로 덮어씌웁니다. (보안)
         post.setUserId(loginUser.getUserId()); 
 
-        // 만약 상태값이 안 들어왔으면 1번(진행중)으로 기본 세팅
+        // 만약 상태/카테고리/중요도 값이 안 들어왔으면 기본값으로 매핑
         if (post.getStatusId() == null) {
-            post.setStatusId(1); 
+            post.setStatusId(1); // 1: 진행중
+        }
+        if (post.getCategoryId() == null) {
+            post.setCategoryId(4L); // 4: 기타
+        }
+        if (post.getPriority() == null) {
+            post.setPriority(2); // 2: 보통
         }
 
         postService.createPost(post);

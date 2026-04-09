@@ -5,7 +5,6 @@ import com.company.board.domain.Comment;
 import com.company.board.domain.User;
 import com.company.board.service.CommentService;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

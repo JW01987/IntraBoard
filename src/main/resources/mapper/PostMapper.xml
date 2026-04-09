@@ -5,15 +5,21 @@
 <mapper namespace="com.company.board.mapper.PostMapper">
 
     <insert id="save" useGeneratedKeys="true" keyProperty="postId">
-        INSERT INTO post (user_id, status_id, title, content)
-        VALUES (#{userId}, #{statusId}, #{title}, #{content})
+        INSERT INTO post (user_id, status_id, category_id, priority, assigned_user_id, title, content)
+        VALUES (#{userId}, #{statusId}, #{categoryId}, #{priority}, #{assignedUserId}, #{title}, #{content})
     </insert>
 
     <!-- 읽어올 땐 is_deleted가 false(0)인 살아있는 글만 -->
     <select id="findById" resultType="Post">
-        SELECT p.*, u.name as authorName, u.company_name as authorCompany, u.role as authorRole 
+        SELECT p.*, 
+               u.name as authorName, u.role as authorRole, c.company_name as authorCompany,
+               cat.category_name as categoryName,
+               a.name as assignedUserName
         FROM post p
         JOIN user u ON p.user_id = u.user_id
+        JOIN company c ON u.company_id = c.company_id
+        JOIN post_category cat ON p.category_id = cat.category_id
+        LEFT JOIN user a ON p.assigned_user_id = a.user_id
         WHERE p.post_id = #{postId} AND p.is_deleted = false
     </select>
 
@@ -25,9 +31,15 @@
         <set> : update할 때 콤마(,)를 자동으로 처리해줌 
     -->
     <select id="findAll" resultType="Post">
-        SELECT p.*, u.name as authorName, u.company_name as authorCompany, u.role as authorRole 
+        SELECT p.*, 
+               u.name as authorName, u.role as authorRole, c.company_name as authorCompany,
+               cat.category_name as categoryName,
+               a.name as assignedUserName
         FROM post p
         JOIN user u ON p.user_id = u.user_id
+        JOIN company c ON u.company_id = c.company_id
+        JOIN post_category cat ON p.category_id = cat.category_id
+        LEFT JOIN user a ON p.assigned_user_id = a.user_id
         WHERE p.is_deleted = false
         <if test="keyword != null and keyword != ''">
             AND p.title LIKE CONCAT('%', #{keyword}, '%')
@@ -35,6 +47,18 @@
         <if test="statusId != null">
             AND p.status_id = #{statusId}
         </if>   
+        <if test="categoryId != null">
+            AND p.category_id = #{categoryId}
+        </if>
+        <if test="priority != null">
+            AND p.priority = #{priority}
+        </if>
+        <if test="companyId != null">
+            AND u.company_id = #{companyId}
+        </if>
+        <if test="assignedUserId != null">
+            AND p.assigned_user_id = #{assignedUserId}
+        </if>
         <if test="startDate != null">
             AND p.created_at >= #{startDate}
         </if>
@@ -61,6 +85,18 @@
         <if test="statusId != null">
             AND p.status_id = #{statusId}
         </if>
+        <if test="categoryId != null">
+            AND p.category_id = #{categoryId}
+        </if>
+        <if test="priority != null">
+            AND p.priority = #{priority}
+        </if>
+        <if test="companyId != null">
+            AND u.company_id = #{companyId}
+        </if>
+        <if test="assignedUserId != null">
+            AND p.assigned_user_id = #{assignedUserId}
+        </if>
         <if test="startDate != null">
             AND p.created_at >= #{startDate}
         </if>
@@ -75,6 +111,9 @@
     <update id="update">
         UPDATE post
         SET status_id = #{statusId},
+            category_id = #{categoryId},
+            priority = #{priority},
+            assigned_user_id = #{assignedUserId},
             title = #{title},
             content = #{content}
         WHERE post_id = #{postId}

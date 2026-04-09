@@ -9,6 +9,11 @@ import java.time.LocalDate;
 public class PostSearchDto {
     private String keyword;
     private Integer statusId; // 1. 진행중 2.완료 3.미해결 4. 숨김
+    private Long categoryId; // 구분 검색
+    private Integer priority; // 중요도 검색
+    private Long companyId; // 고객사별 분류 필터
+    private Long assignedUserId; // 내게 할당된 작업 검색
+    
     private LocalDate startDate;
     private LocalDate endDate;
     private String authorName; // 작성자 검색

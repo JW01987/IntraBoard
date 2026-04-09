@@ -33,4 +33,7 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+
+	// Java 21에서 Mockito(byte-buddy) 동적 에이전트 로딩 관련 경고 억제
+	jvmArgs '-XX:+EnableDynamicAgentLoading', '-Xshare:off'
 }
