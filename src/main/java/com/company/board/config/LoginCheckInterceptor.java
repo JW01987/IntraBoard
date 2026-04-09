@@ -1,10 +1,8 @@
 package com.company.board.config;
-
-import com.company.board.common.ApiResponse;
-
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -13,7 +11,7 @@ public class LoginCheckInterceptor implements HandlerInterceptor {
 
     // 컨트롤러 실행 전 실행
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+    public boolean preHandle(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler) throws Exception {
 
         HttpSession session = request.getSession(false);
 

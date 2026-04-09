@@ -12,8 +12,8 @@
         #{ ... } = 자동 매핑(파라미터 바인딩) != ${ } 백틱이랑 다름
     -->
     <insert id="save" useGeneratedKeys="true" keyProperty="userId">
-        INSERT INTO user (login_id, password, name, role)
-        VALUES (#{loginId}, #{password}, #{name}, #{role})
+        INSERT INTO user (login_id, password, name, company_name, role)
+        VALUES (#{loginId}, #{password}, #{name}, #{companyName}, #{role})
     </insert>
 
     <!-- 2. 로그인 아이디로 회원 찾기 -->
@@ -40,5 +40,12 @@
         FROM user 
         ORDER BY user_id DESC
     </select>
+
+    <!-- 5. 유저 권한 수정 (관리자 전용) -->
+    <update id="updateRole">
+        UPDATE user
+        SET role = #{role}
+        WHERE user_id = #{userId}
+    </update>
 
 </mapper>

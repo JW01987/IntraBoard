@@ -2,6 +2,7 @@ package com.company.board.service;
 
 import com.company.board.domain.User;
 import com.company.board.mapper.UserMapper;
+import com.company.board.util.PasswordUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -15,7 +16,10 @@ public class UserService {
 
     // 1. 회원가입 로직
     public void registerUser(User user) {
-        // TODO: 암호화
+        // 비밀번호를 일방향 암호화(SHA-256)해서 저장
+        String encryptedPassword = PasswordUtils.encrypt(user.getPassword());
+        user.setPassword(encryptedPassword);
+        
         userMapper.save(user);
     }
 
@@ -29,12 +33,17 @@ public class UserService {
         // 아이디로 DB에서 유저를 찾음
         User user = userMapper.findByLoginId(loginId);
 
-        // 만약 유저가 존재하고 && 사용자가 입력한 비밀번호와 DB 비밀번호가 같다면?
-        if (user != null && user.getPassword().equals(password)) {
+        // 만약 유저가 존재하고 && 사용자가 입력한 비밀번호(암호화 검증)가 맞다면?
+        if (user != null && PasswordUtils.match(password, user.getPassword())) {
             return user; // 로그인된 유저 객체 반환
         }
         
         // 아이디가 없거나 비밀번호가 틀리면 실패
         return null;
+    }
+
+    // 4. 유저 권한 변경 로직 (관리자 전용)
+    public void updateUserRole(Long userId, Integer role) {
+        userMapper.updateRole(userId, role);
     }
 }

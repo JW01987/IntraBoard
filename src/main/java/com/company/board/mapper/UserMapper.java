@@ -17,4 +17,7 @@ public interface UserMapper {
  
     // 4. 모든 유저 목록 조회
     List<User> findAll();
+
+    // 5. 유저 권한 수정 (관리자 전용)
+    void updateRole(@org.apache.ibatis.annotations.Param("userId") Long userId, @org.apache.ibatis.annotations.Param("role") Integer role);
 }

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.company.board.mapper.NoticeMapper">
+
+    <insert id="save" useGeneratedKeys="true" keyProperty="noticeId">
+        INSERT INTO notice (user_id, title, content)
+        VALUES (#{userId}, #{title}, #{content})
+    </insert>
+
+    <select id="findById" resultType="Notice">
+        SELECT n.*, u.name as authorName, u.company_name as authorCompany
+        FROM notice n
+        JOIN user u ON n.user_id = u.user_id
+        WHERE n.notice_id = #{noticeId}
+    </select>
+
+    <select id="findAll" resultType="Notice">
+        SELECT n.*, u.name as authorName, u.company_name as authorCompany
+        FROM notice n
+        JOIN user u ON n.user_id = u.user_id
+        ORDER BY n.notice_id DESC
+    </select>
+
+    <update id="update">
+        UPDATE notice
+        SET title = #{title}, content = #{content}
+        WHERE notice_id = #{noticeId}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM notice WHERE notice_id = #{noticeId}
+    </delete>
+
+    <update id="increaseViewCount">
+        UPDATE notice
+        SET view_count = view_count + 1
+        WHERE notice_id = #{noticeId}
+    </update>
+
+</mapper>

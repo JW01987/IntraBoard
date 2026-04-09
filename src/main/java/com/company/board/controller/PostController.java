@@ -6,7 +6,6 @@ import com.company.board.domain.PostSearchDto;
 import com.company.board.domain.User;
 import com.company.board.service.PostService;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

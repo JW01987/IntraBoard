@@ -19,9 +19,11 @@
       같은 부모ID를 가진 댓글이 묶이고 시간순으로 정렬됨
     -->
     <select id="findByPostId" resultType="Comment">
-        SELECT * FROM comment
-        WHERE post_id = #{postId}
-        ORDER BY COALESCE(parent_id, comment_id) ASC, comment_id ASC
+        SELECT c.*, u.name as authorName, u.company_name as authorCompany, u.role as authorRole 
+        FROM comment c
+        JOIN user u ON c.user_id = u.user_id
+        WHERE c.post_id = #{postId}
+        ORDER BY COALESCE(c.parent_id, c.comment_id) ASC, c.comment_id ASC
     </select>
 
     <select id="findById" resultType="Comment">

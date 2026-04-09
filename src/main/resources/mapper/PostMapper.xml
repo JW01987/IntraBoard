@@ -11,8 +11,10 @@
 
     <!-- 읽어올 땐 is_deleted가 false(0)인 살아있는 글만 -->
     <select id="findById" resultType="Post">
-        SELECT * FROM post
-        WHERE post_id = #{postId} AND is_deleted = false
+        SELECT p.*, u.name as authorName, u.company_name as authorCompany, u.role as authorRole 
+        FROM post p
+        JOIN user u ON p.user_id = u.user_id
+        WHERE p.post_id = #{postId} AND p.is_deleted = false
     </select>
 
     <!-- 
@@ -23,45 +25,50 @@
         <set> : update할 때 콤마(,)를 자동으로 처리해줌 
     -->
     <select id="findAll" resultType="Post">
-        SELECT * FROM post
-        WHERE is_deleted = false
-        <!-- keyword가 null이 아니고 빈 문자열이 아니면 -->
+        SELECT p.*, u.name as authorName, u.company_name as authorCompany, u.role as authorRole 
+        FROM post p
+        JOIN user u ON p.user_id = u.user_id
+        WHERE p.is_deleted = false
         <if test="keyword != null and keyword != ''">
-            AND title LIKE CONCAT('%', #{keyword}, '%')
+            AND p.title LIKE CONCAT('%', #{keyword}, '%')
         </if>
-        <!-- statusId가 null이 아니면 -->
         <if test="statusId != null">
-            AND status_id = #{statusId}
+            AND p.status_id = #{statusId}
         </if>   
-        <!-- startDate가 null이 아니면 -->
         <if test="startDate != null">
-            AND created_at >= #{startDate}
+            AND p.created_at >= #{startDate}
         </if>
-        <!-- endDate가 null이 아니면 -->
         <if test="endDate != null">
-            <!-- 10일까지 검색했으면 10일 23:59:59까지 포함하기 위해 +1일 미만으로 계산 -->
-            AND created_at &lt; DATE_ADD(#{endDate}, INTERVAL 1 DAY) 
+            AND p.created_at &lt; DATE_ADD(#{endDate}, INTERVAL 1 DAY) 
+        </if>
+        <if test="authorName != null and authorName != ''">
+            AND u.name LIKE CONCAT('%', #{authorName}, '%')
         </if>
         
-        ORDER BY post_id DESC
+        ORDER BY p.post_id DESC
         LIMIT #{size} OFFSET #{offset}
     </select>
 
     <select id="countAll" resultType="int">
-        SELECT COUNT(*) FROM post
-        WHERE is_deleted = false
+        SELECT COUNT(*) 
+        FROM post p
+        JOIN user u ON p.user_id = u.user_id
+        WHERE p.is_deleted = false
         
         <if test="keyword != null and keyword != ''">
-            AND title LIKE CONCAT('%', #{keyword}, '%')
+            AND p.title LIKE CONCAT('%', #{keyword}, '%')
         </if>
         <if test="statusId != null">
-            AND status_id = #{statusId}
+            AND p.status_id = #{statusId}
         </if>
         <if test="startDate != null">
-            AND created_at >= #{startDate}
+            AND p.created_at >= #{startDate}
         </if>
         <if test="endDate != null">
-            AND created_at &lt; DATE_ADD(#{endDate}, INTERVAL 1 DAY)
+            AND p.created_at &lt; DATE_ADD(#{endDate}, INTERVAL 1 DAY)
+        </if>
+        <if test="authorName != null and authorName != ''">
+            AND u.name LIKE CONCAT('%', #{authorName}, '%')
         </if>
     </select>
 

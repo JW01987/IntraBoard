@@ -11,6 +11,7 @@ public class PostSearchDto {
     private Integer statusId; // 1. 진행중 2.완료 3.미해결 4. 숨김
     private LocalDate startDate;
     private LocalDate endDate;
+    private String authorName; // 작성자 검색
 
     // --- 페이징(Paging) 전용 변수 ---
     private int page = 1; // 기본 페이지: 1쪽부터

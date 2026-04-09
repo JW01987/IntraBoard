@@ -11,6 +11,7 @@ public class User {
     private String loginId;
     private String password;
     private String name;
+    private String companyName; // 소속 회사명
     private Integer role;
     private LocalDateTime createdAt;
 }

@@ -47,11 +47,31 @@ public class UserController {
     // 3. 로그아웃 API
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout(HttpServletRequest request) {
-        // request.getSession(false) : 캐비넷이 있으면 꺼내오고, 아예 접속한 적이 없어 없으면 새로 만들지 않는다!
+        // request.getSession(false) : 세션이 있으면 꺼내오고, 없으면 새로 만들지 않음
         HttpSession session = request.getSession(false);
         if (session != null) {
             session.invalidate(); // 세션 삭제
         }
         return ResponseEntity.ok(ApiResponse.success("로그아웃 되었습니다."));
+    }
+
+    // 4. 권한 변경 API (관리자 전용)
+    @PutMapping("/{targetUserId}/role")
+    public ResponseEntity<ApiResponse<Void>> updateRole(
+            @PathVariable("targetUserId") Long targetUserId,
+            @RequestBody User roleUpdateData,
+            HttpServletRequest request) {
+        
+        // 1. 방어벽: 요청자가 관리자(Role=1)인지 확인
+        HttpSession session = request.getSession(false);
+        User loginUser = (session != null) ? (User) session.getAttribute("LOGIN_USER") : null;
+
+        if (loginUser == null || loginUser.getRole() != 1) {
+            return ResponseEntity.status(403).body(ApiResponse.error("권한이 없습니다. (관리자 전용)"));
+        }
+
+        // 2. 권한 수정
+        userService.updateUserRole(targetUserId, roleUpdateData.getRole());
+        return ResponseEntity.ok(ApiResponse.success("유저 권한이 성공적으로 변경되었습니다."));
     }
 }

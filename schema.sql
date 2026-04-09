@@ -8,7 +8,8 @@ CREATE TABLE IF NOT EXISTS `user` (
     `login_id` VARCHAR(50) NOT NULL UNIQUE,
     `password` VARCHAR(255) NOT NULL,
     `name` VARCHAR(50) NOT NULL,
-    `role` TINYINT NOT NULL COMMENT '1:관리자, 2:중간관리자, 3:고객사, 4:협력사',
+    `company_name` VARCHAR(100) NOT NULL,
+    `role` TINYINT NOT NULL COMMENT '1:관리자, 2:본사, 3:고객사, 4:협력사',
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -60,4 +61,15 @@ CREATE TABLE IF NOT EXISTS `file` (
     `file_size` BIGINT NOT NULL,
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (`post_id`) REFERENCES `post`(`post_id`)
+);
+
+-- 7. 공지사항 전용 테이블
+CREATE TABLE IF NOT EXISTS `notice` (
+    `notice_id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `user_id` BIGINT NOT NULL,
+    `title` VARCHAR(255) NOT NULL,
+    `content` TEXT NOT NULL,
+    `view_count` INT DEFAULT 0,
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (`user_id`) REFERENCES `user`(`user_id`)
 );
