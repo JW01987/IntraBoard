@@ -1,6 +1,7 @@
 package com.company.board.controller;
 
 import com.company.board.common.ApiResponse;
+import com.company.board.constant.UserRole;
 import com.company.board.domain.Comment;
 import com.company.board.domain.User;
 import com.company.board.service.CommentService;
@@ -44,7 +45,7 @@ public class CommentController {
         User loginUser = (User) request.getSession(false).getAttribute("LOGIN_USER");
 
         // 본인(작성자)이 아니면서 관리자(role=1)도 아니라면 에러
-        if (!target.getUserId().equals(loginUser.getUserId()) && loginUser.getRole() != 1) {
+        if (!target.getUserId().equals(loginUser.getUserId()) && !UserRole.isAdmin(loginUser.getRole())) {
             return ResponseEntity.status(403).body(ApiResponse.error("댓글을 삭제할 권한이 없습니다."));
         }
 

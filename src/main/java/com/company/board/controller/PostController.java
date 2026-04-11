@@ -1,6 +1,9 @@
 package com.company.board.controller;
 
 import com.company.board.common.ApiResponse;
+import com.company.board.constant.PostStatus;
+import com.company.board.constant.Priority;
+import com.company.board.constant.UserRole;
 import com.company.board.domain.Post;
 import com.company.board.domain.PostSearchDto;
 import com.company.board.domain.User;
@@ -45,13 +48,13 @@ public class PostController {
 
         // 만약 상태/카테고리/중요도 값이 안 들어왔으면 기본값으로 매핑
         if (post.getStatusId() == null) {
-            post.setStatusId(1); // 1: 진행중
+            post.setStatusId(PostStatus.IN_PROGRESS.getCode());
         }
         if (post.getCategoryId() == null) {
-            post.setCategoryId(4L); // 4: 기타
+            post.setCategoryId(4L); // 기타
         }
         if (post.getPriority() == null) {
-            post.setPriority(2); // 2: 보통
+            post.setPriority(Priority.NORMAL.getCode());
         }
 
         postService.createPost(post);
@@ -65,7 +68,7 @@ public class PostController {
         Post target = postService.getPostBasic(postId);
         User loginUser = (User) request.getSession(false).getAttribute("LOGIN_USER");
 
-        if (!target.getUserId().equals(loginUser.getUserId()) && loginUser.getRole() != 1) {
+        if (!target.getUserId().equals(loginUser.getUserId()) && !UserRole.isAdmin(loginUser.getRole())) {
             return ResponseEntity.status(403).body(ApiResponse.error("수정 권한이 없습니다."));
         }
 
@@ -81,7 +84,7 @@ public class PostController {
         Post target = postService.getPostBasic(postId);
         User loginUser = (User) request.getSession(false).getAttribute("LOGIN_USER");
 
-        if (!target.getUserId().equals(loginUser.getUserId()) && loginUser.getRole() != 1) {
+        if (!target.getUserId().equals(loginUser.getUserId()) && !UserRole.isAdmin(loginUser.getRole())) {
             return ResponseEntity.status(403).body(ApiResponse.error("삭제 권한이 없습니다."));
         }
 

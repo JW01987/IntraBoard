@@ -5,8 +5,8 @@
 <mapper namespace="com.company.board.mapper.PostMapper">
 
     <insert id="save" useGeneratedKeys="true" keyProperty="postId">
-        INSERT INTO post (user_id, status_id, category_id, priority, assigned_user_id, title, content)
-        VALUES (#{userId}, #{statusId}, #{categoryId}, #{priority}, #{assignedUserId}, #{title}, #{content})
+        INSERT INTO post (board_type, user_id, status_id, category_id, priority, assigned_user_id, title, content)
+        VALUES (#{boardType}, #{userId}, #{statusId}, #{categoryId}, #{priority}, #{assignedUserId}, #{title}, #{content})
     </insert>
 
     <!-- 읽어올 땐 is_deleted가 false(0)인 살아있는 글만 -->
@@ -18,7 +18,7 @@
         FROM post p
         JOIN user u ON p.user_id = u.user_id
         JOIN company c ON u.company_id = c.company_id
-        JOIN post_category cat ON p.category_id = cat.category_id
+        LEFT JOIN post_category cat ON p.category_id = cat.category_id
         LEFT JOIN user a ON p.assigned_user_id = a.user_id
         WHERE p.post_id = #{postId} AND p.is_deleted = false
     </select>
@@ -38,9 +38,12 @@
         FROM post p
         JOIN user u ON p.user_id = u.user_id
         JOIN company c ON u.company_id = c.company_id
-        JOIN post_category cat ON p.category_id = cat.category_id
+        LEFT JOIN post_category cat ON p.category_id = cat.category_id
         LEFT JOIN user a ON p.assigned_user_id = a.user_id
         WHERE p.is_deleted = false
+        <if test="boardType != null and boardType != ''">
+            AND p.board_type = #{boardType}
+        </if>
         <if test="keyword != null and keyword != ''">
             AND p.title LIKE CONCAT('%', #{keyword}, '%')
         </if>
@@ -79,6 +82,9 @@
         JOIN user u ON p.user_id = u.user_id
         WHERE p.is_deleted = false
         
+        <if test="boardType != null and boardType != ''">
+            AND p.board_type = #{boardType}
+        </if>
         <if test="keyword != null and keyword != ''">
             AND p.title LIKE CONCAT('%', #{keyword}, '%')
         </if>

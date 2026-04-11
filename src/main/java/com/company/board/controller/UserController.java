@@ -1,6 +1,7 @@
 package com.company.board.controller;
 
 import com.company.board.domain.User;
+import com.company.board.constant.UserRole;
 import com.company.board.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -66,7 +67,7 @@ public class UserController {
         HttpSession session = request.getSession(false);
         User loginUser = (session != null) ? (User) session.getAttribute("LOGIN_USER") : null;
 
-        if (loginUser == null || loginUser.getRole() != 1) {
+        if (loginUser == null || !UserRole.isAdmin(loginUser.getRole())) {
             return ResponseEntity.status(403).body(ApiResponse.error("권한이 없습니다. (관리자 전용)"));
         }
 

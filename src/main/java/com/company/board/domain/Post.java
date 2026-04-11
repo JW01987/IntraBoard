@@ -9,11 +9,12 @@ import java.util.List;
 @Setter
 public class Post {
     private Long postId;
+    private String boardType; // NOTICE(공지), ISSUE(이슈/문의), ARCHIVE(자료실)
     private Long userId; // 작성자
-    private Integer statusId; // 진행상태
-    private Long categoryId; // 게시글 분류 (버그, 오류 등)
-    private Integer priority; // 1:낮음, 2:보통, 3:높음, 4:긴급
-    private Long assignedUserId; // 배정된 담당자 (본사 직원)
+    private Integer statusId; // 진행상태 (ISSUE 전용)
+    private Long categoryId; // 게시글 분류 (ISSUE 전용)
+    private Integer priority; // 1:낮음, 2:보통, 3:높음, 4:긴급 (ISSUE 전용)
+    private Long assignedUserId; // 배정된 담당자 (ISSUE 전용)
     
     private String title;
     private String content;

@@ -1,9 +1,12 @@
 package com.company.board;
 
+import com.company.board.constant.BoardType;
+import com.company.board.constant.PostStatus;
+import com.company.board.constant.Priority;
+import com.company.board.constant.UserRole;
 import com.company.board.domain.*;
 import com.company.board.mapper.AdminMapper;
 import com.company.board.mapper.CompanyMapper;
-import com.company.board.service.NoticeService;
 import com.company.board.service.PostService;
 import com.company.board.service.UserService;
 import org.junit.jupiter.api.DisplayName;
@@ -24,7 +27,6 @@ class BoardIntegrationTest {
 
     @Autowired UserService userService;
     @Autowired PostService postService;
-    @Autowired NoticeService noticeService;
     @Autowired CompanyMapper companyMapper;
     @Autowired AdminMapper adminMapper;
 
@@ -32,9 +34,9 @@ class BoardIntegrationTest {
     // 시나리오 전체 흐름
     // 1. 관리자가 새 고객사 등록
     // 2. 각 소속의 유저 회원가입
-    // 3. 공지사항 작성 (관리자 전용)
-    // 4. 일반 직원이 카테고리/중요도 설정하여 게시글 작성
-    // 5. 각종 검색 필터 검증
+    // 3. 공지사항 작성 (board_type=NOTICE)
+    // 4. 일반 직원이 이슈 게시글 작성 (board_type=ISSUE)
+    // 5. 각종 검색 필터 검증 (boardType 필터 포함)
     // 6. 관리자 대시보드 통계 검증
     // ============================================================
 
@@ -64,16 +66,16 @@ class BoardIntegrationTest {
         admin.setLoginId("testadmin_" + System.currentTimeMillis()); // 중복 방지용 타임스탬프
         admin.setPassword("secret123");
         admin.setName("테스트관리자");
-        admin.setCompanyId(1L); // schema.sql 에 자동생성된 "(주)보드본사"(company_id=1)
-        admin.setRole(1); // 슈퍼관리자
+        admin.setCompanyId(1L);
+        admin.setRole(UserRole.ADMIN.getCode());
         userService.registerUser(admin);
 
         User client = new User();
         client.setLoginId("testclient_" + System.currentTimeMillis());
         client.setPassword("client123");
         client.setName("고객사직원A");
-        client.setCompanyId(newClient.getCompanyId()); // 방금 만든 삼성고객사 소속
-        client.setRole(2); // 일반회원
+        client.setCompanyId(newClient.getCompanyId());
+        client.setRole(UserRole.MEMBER.getCode());
         userService.registerUser(client);
 
         assertNotNull(admin.getUserId(), "관리자 PK 발급 확인");
@@ -85,50 +87,47 @@ class BoardIntegrationTest {
 
 
         // ==========================================
-        // Step 3. 공지사항 작성 (관리자 전용)
+        // Step 3. 공지사항 작성 (board_type = NOTICE)
         // ==========================================
-        Notice notice = new Notice();
-        notice.setUserId(admin.getUserId());
-        notice.setTitle("4월 전체 회의 공지");
-        notice.setContent("다음 주 월요일 오전 10시 필참 바랍니다.");
-        noticeService.createNotice(notice);
-
-        List<Notice> notices = noticeService.getNoticeList();
-        assertThat(notices).isNotEmpty();
-        // 내가 방금 추가한 공지사항이 목록 최상단에 있어야 함 (ORDER BY notice_id DESC)
-        assertThat(notices.get(0).getTitle()).contains("4월");
-        assertThat(notices.get(0).getAuthorName()).isEqualTo("테스트관리자"); // 조인 확인
-        assertThat(notices.get(0).getAuthorCompany()).isEqualTo("(주)보드본사"); // 회사 조인 확인
+        Post noticePost = new Post();
+        noticePost.setBoardType(BoardType.NOTICE.getValue());
+        noticePost.setUserId(admin.getUserId());
+        noticePost.setTitle("4월 전체 회의 공지");
+        noticePost.setContent("다음 주 월요일 오전 10시 필참 바랍니다.");
+        postService.createPost(noticePost);
 
 
         // ==========================================
         // Step 4. 고객사 직원이 카테고리/중요도 포함 게시글 3개 작성
         // ==========================================
         Post bugPost = new Post();
+        bugPost.setBoardType(BoardType.ISSUE.getValue());
         bugPost.setUserId(client.getUserId());
-        bugPost.setCategoryId(1L);  // 1: 버그/오류 (schema.sql 기본값)
-        bugPost.setPriority(4);     // 4: 긴급
+        bugPost.setCategoryId(1L);
+        bugPost.setPriority(Priority.URGENT.getCode());
         bugPost.setTitle("[긴급] 로그인 페이지 500 에러");
         bugPost.setContent("로그인 시도 시 500 Internal Server Error 발생합니다.");
-        bugPost.setStatusId(1);     // 진행중
+        bugPost.setStatusId(PostStatus.IN_PROGRESS.getCode());
         postService.createPost(bugPost);
 
         Post inquiryPost = new Post();
+        inquiryPost.setBoardType(BoardType.ISSUE.getValue());
         inquiryPost.setUserId(client.getUserId());
-        inquiryPost.setCategoryId(2L); // 2: 기능문의
-        inquiryPost.setPriority(2);    // 2: 보통
+        inquiryPost.setCategoryId(2L);
+        inquiryPost.setPriority(Priority.NORMAL.getCode());
         inquiryPost.setTitle("검색 필터 추가 가능한가요?");
         inquiryPost.setContent("기간별 검색 기능이 필요합니다.");
-        inquiryPost.setStatusId(1);
+        inquiryPost.setStatusId(PostStatus.IN_PROGRESS.getCode());
         postService.createPost(inquiryPost);
 
         Post donePost = new Post();
+        donePost.setBoardType(BoardType.ISSUE.getValue());
         donePost.setUserId(admin.getUserId());
-        donePost.setCategoryId(3L);  // 3: 계정/권한
-        donePost.setPriority(1);     // 1: 낮음
+        donePost.setCategoryId(3L);
+        donePost.setPriority(Priority.LOW.getCode());
         donePost.setTitle("초기 계정 세팅 완료");
         donePost.setContent("초기 어드민 계정 세팅이 완료되었습니다.");
-        donePost.setStatusId(2);     // 완료
+        donePost.setStatusId(PostStatus.DONE.getCode());
         postService.createPost(donePost);
 
 
@@ -136,32 +135,49 @@ class BoardIntegrationTest {
         // Step 5. 검색 필터 시나리오 검증
         // ==========================================
 
-        // 5-1. 카테고리 필터 (버그/오류만 1개 나와야 함)
+        // 5-1. boardType 필터 (NOTICE만 1개 나와야 함)
+        PostSearchDto noticeFilter = new PostSearchDto();
+        noticeFilter.setBoardType(BoardType.NOTICE.getValue());
+        Map<String, Object> noticeResult = postService.getPostList(noticeFilter);
+        List<Post> noticePosts = (List<Post>) noticeResult.get("list");
+        assertThat(noticePosts).hasSize(1);
+        assertThat(noticePosts.get(0).getTitle()).contains("4월");
+        assertThat(noticePosts.get(0).getAuthorName()).isEqualTo("테스트관리자");
+        assertThat(noticePosts.get(0).getAuthorCompany()).isEqualTo("(주)보드본사");
+
+        // 5-2. boardType 필터 (ISSUE만 3개 나와야 함)
+        PostSearchDto issueFilter = new PostSearchDto();
+        issueFilter.setBoardType(BoardType.ISSUE.getValue());
+        Map<String, Object> issueResult = postService.getPostList(issueFilter);
+        List<Post> issuePosts = (List<Post>) issueResult.get("list");
+        assertThat(issuePosts).hasSize(3);
+
+        // 5-3. 카테고리 필터 (버그/오류만 1개 나와야 함)
         PostSearchDto bugFilter = new PostSearchDto();
         bugFilter.setCategoryId(1L);
         Map<String, Object> bugResult = postService.getPostList(bugFilter);
         List<Post> bugPosts = (List<Post>) bugResult.get("list");
         assertThat(bugPosts).hasSize(1);
-        assertThat(bugPosts.get(0).getCategoryName()).isEqualTo("버그/오류"); // 카테고리 조인 확인
-        assertThat(bugPosts.get(0).getAuthorCompany()).isEqualTo("삼성고객사"); // 고객사 조인 확인
+        assertThat(bugPosts.get(0).getCategoryName()).isEqualTo("버그/오류");
+        assertThat(bugPosts.get(0).getAuthorCompany()).isEqualTo("삼성고객사");
 
-        // 5-2. 상태 필터 (완료 = statusId:2, 1개 나와야 함)
+        // 5-4. 상태 필터 (완료 = statusId:2, 1개)
         PostSearchDto doneFilter = new PostSearchDto();
-        doneFilter.setStatusId(2);
+        doneFilter.setStatusId(PostStatus.DONE.getCode());
         Map<String, Object> doneResult = postService.getPostList(doneFilter);
         List<Post> donePosts = (List<Post>) doneResult.get("list");
         assertThat(donePosts).hasSize(1);
         assertThat(donePosts.get(0).getTitle()).contains("완료");
 
-        // 5-3. 중요도 필터 (긴급=4, 1개 나와야 함)
+        // 5-5. 중요도 필터 (긴급=4, 1개)
         PostSearchDto urgentFilter = new PostSearchDto();
-        urgentFilter.setPriority(4);
+        urgentFilter.setPriority(Priority.URGENT.getCode());
         Map<String, Object> urgentResult = postService.getPostList(urgentFilter);
         List<Post> urgentPosts = (List<Post>) urgentResult.get("list");
         assertThat(urgentPosts).hasSize(1);
         assertThat(urgentPosts.get(0).getTitle()).contains("긴급");
 
-        // 5-4. 회사별 필터 (삼성고객사=newClientId, 2개 나와야 함)
+        // 5-6. 회사별 필터
         PostSearchDto companyFilter = new PostSearchDto();
         companyFilter.setCompanyId(newClient.getCompanyId());
         Map<String, Object> companyResult = postService.getPostList(companyFilter);
@@ -173,7 +189,7 @@ class BoardIntegrationTest {
         nameFilter.setAuthorName("테스트관리자");
         Map<String, Object> nameResult = postService.getPostList(nameFilter);
         List<Post> namePosts = (List<Post>) nameResult.get("list");
-        assertThat(namePosts).hasSize(1);
+        assertThat(namePosts).hasSize(2);
 
         // 5-6. 키워드 검색
         PostSearchDto keywordFilter = new PostSearchDto();

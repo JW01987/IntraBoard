@@ -1,6 +1,7 @@
 package com.company.board.controller;
 
 import com.company.board.common.ApiResponse;
+import com.company.board.constant.UserRole;
 import com.company.board.domain.Category;
 import com.company.board.domain.Company;
 import com.company.board.domain.User;
@@ -37,7 +38,7 @@ public class SystemController {
     @PostMapping("/companies")
     public ResponseEntity<ApiResponse<Void>> addCompany(@RequestBody Company company, HttpServletRequest request) {
         User loginUser = (User) request.getSession(false).getAttribute("LOGIN_USER");
-        if (loginUser.getRole() != 1) { // 1번 슈퍼관리자만 추가 가능
+        if (!UserRole.isAdmin(loginUser.getRole())) {
             return ResponseEntity.status(403).body(ApiResponse.error("회사 등록은 관리자만 가능합니다."));
         }
         
@@ -53,7 +54,7 @@ public class SystemController {
             HttpServletRequest request) {
         
         User loginUser = (User) request.getSession(false).getAttribute("LOGIN_USER");
-        if (loginUser.getRole() != 1) {
+        if (!UserRole.isAdmin(loginUser.getRole())) {
             return ResponseEntity.status(403).body(ApiResponse.error("회사 수정은 관리자만 가능합니다."));
         }
         
@@ -69,7 +70,7 @@ public class SystemController {
             HttpServletRequest request) {
         
         User loginUser = (User) request.getSession(false).getAttribute("LOGIN_USER");
-        if (loginUser.getRole() != 1) {
+        if (!UserRole.isAdmin(loginUser.getRole())) {
             return ResponseEntity.status(403).body(ApiResponse.error("회사 삭제는 관리자만 가능합니다."));
         }
 

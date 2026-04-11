@@ -1,6 +1,7 @@
 package com.company.board.controller;
 
 import com.company.board.common.ApiResponse;
+import com.company.board.constant.UserRole;
 import com.company.board.domain.User;
 import com.company.board.mapper.AdminMapper;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,7 +26,7 @@ public class AdminController {
         
         // 권한 방어벽
         User loginUser = (User) request.getSession(false).getAttribute("LOGIN_USER");
-        if (loginUser.getRole() != 1) {
+        if (!UserRole.isAdmin(loginUser.getRole())) {
             return ResponseEntity.status(403).body(ApiResponse.error("접근 권한이 없습니다. (슈퍼관리자 전용)"));
         }
 

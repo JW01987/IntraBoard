@@ -1,6 +1,7 @@
 package com.company.board.controller;
 
 import com.company.board.common.ApiResponse;
+import com.company.board.constant.UserRole;
 import com.company.board.domain.Notice;
 import com.company.board.domain.User;
 import com.company.board.service.NoticeService;
@@ -36,7 +37,7 @@ public class NoticeController {
     @PostMapping
     public ResponseEntity<ApiResponse<Void>> createNotice(@RequestBody Notice notice, HttpServletRequest request) {
         User loginUser = (User) request.getSession(false).getAttribute("LOGIN_USER");
-        if (loginUser.getRole() != 1) {
+        if (!UserRole.isAdmin(loginUser.getRole())) {
             return ResponseEntity.status(403).body(ApiResponse.error("공지사항은 관리자만 작성할 수 있습니다."));
         }
         
@@ -49,7 +50,7 @@ public class NoticeController {
     @PutMapping("/{noticeId}")
     public ResponseEntity<ApiResponse<Void>> updateNotice(@PathVariable("noticeId") Long noticeId, @RequestBody Notice notice, HttpServletRequest request) {
         User loginUser = (User) request.getSession(false).getAttribute("LOGIN_USER");
-        if (loginUser.getRole() != 1) {
+        if (!UserRole.isAdmin(loginUser.getRole())) {
             return ResponseEntity.status(403).body(ApiResponse.error("공지사항 수정 권한이 없습니다."));
         }
 
@@ -62,7 +63,7 @@ public class NoticeController {
     @DeleteMapping("/{noticeId}")
     public ResponseEntity<ApiResponse<Void>> deleteNotice(@PathVariable("noticeId") Long noticeId, HttpServletRequest request) {
         User loginUser = (User) request.getSession(false).getAttribute("LOGIN_USER");
-        if (loginUser.getRole() != 1) {
+        if (!UserRole.isAdmin(loginUser.getRole())) {
             return ResponseEntity.status(403).body(ApiResponse.error("공지사항 삭제 권한이 없습니다."));
         }
 

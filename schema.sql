@@ -44,14 +44,15 @@ CREATE TABLE IF NOT EXISTS `post_category` (
 INSERT INTO post_category (category_name) VALUES ('버그/오류'), ('기능문의'), ('계정/권한'), ('기타')
 ON DUPLICATE KEY UPDATE category_name=VALUES(category_name);
 
--- 4. 게시글 테이블
+-- 4. 게시글 테이블 (board_type으로 공지사항/이슈/자료실 구분)
 CREATE TABLE IF NOT EXISTS `post` (
     `post_id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `board_type` ENUM('NOTICE', 'ISSUE', 'ARCHIVE') NOT NULL DEFAULT 'ISSUE',
     `user_id` BIGINT NOT NULL,
-    `status_id` INT NOT NULL,
-    `category_id` BIGINT NOT NULL,
-    `priority` TINYINT DEFAULT 2 COMMENT '1:낮음, 2:보통, 3:높음, 4:긴급',
-    `assigned_user_id` BIGINT DEFAULT NULL COMMENT '담당 처리자(본사직원 등)',
+    `status_id` INT DEFAULT NULL COMMENT 'ISSUE 전용 (NOTICE/ARCHIVE는 NULL 가능)',
+    `category_id` BIGINT DEFAULT NULL COMMENT 'ISSUE 전용',
+    `priority` TINYINT DEFAULT NULL COMMENT 'ISSUE 전용 (1:낮음, 2:보통, 3:높음, 4:긴급)',
+    `assigned_user_id` BIGINT DEFAULT NULL COMMENT 'ISSUE 전용 담당 처리자',
     `title` VARCHAR(255) NOT NULL,
     `content` TEXT NOT NULL,
     `view_count` INT DEFAULT 0,
@@ -90,13 +91,13 @@ CREATE TABLE IF NOT EXISTS `file` (
     FOREIGN KEY (`post_id`) REFERENCES `post`(`post_id`)
 );
 
--- 7. 공지사항 전용 테이블
-CREATE TABLE IF NOT EXISTS `notice` (
-    `notice_id` BIGINT AUTO_INCREMENT PRIMARY KEY,
-    `user_id` BIGINT NOT NULL,
-    `title` VARCHAR(255) NOT NULL,
-    `content` TEXT NOT NULL,
-    `view_count` INT DEFAULT 0,
+-- 7. FAQ 테이블 (관리자 전용 CRUD)
+CREATE TABLE IF NOT EXISTS `faq` (
+    `faq_id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `question` VARCHAR(500) NOT NULL,
+    `answer` TEXT NOT NULL,
+    `is_active` BOOLEAN DEFAULT TRUE,
+    `sort_order` INT DEFAULT 0 COMMENT '정렬 순서 (낮을수록 위)',
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (`user_id`) REFERENCES `user`(`user_id`)
+    `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );

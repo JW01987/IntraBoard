@@ -8,6 +8,7 @@ import java.time.LocalDate;
 @Setter
 public class PostSearchDto {
     private String keyword;
+    private String boardType; // NOTICE(공지), ISSUE(이슈/문의), ARCHIVE(자료실)
     private Integer statusId; // 1. 진행중 2.완료 3.미해결 4. 숨김
     private Long categoryId; // 구분 검색
     private Integer priority; // 중요도 검색
