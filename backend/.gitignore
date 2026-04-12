@@ -42,3 +42,6 @@ application.yml
 application.properties
 application-*.yml
 application-*.properties
+
+# 업로드된 파일
+uploads/

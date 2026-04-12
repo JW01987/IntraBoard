@@ -1,0 +1,16 @@
+spring:
+  servlet:
+    multipart:
+      max-file-size: 50MB     # 파일 하나당 최고 용량
+      max-request-size: 50MB  # 한번에 올릴 수 있는 최고 용량
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/board_db?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: <아이디>
+    password: <비밀번호>
+
+mybatis:
+  mapper-locations: classpath:mapper/**/*.xml
+  type-aliases-package: com.company.board.domain
+  configuration:
+    map-underscore-to-camel-case: true
