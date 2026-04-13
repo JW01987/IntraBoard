@@ -25,6 +25,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .excludePathPatterns(
                         "/api/users/login",
                         "/api/users/register", // 회원가입, 로그인은 인증 없이 뚫려있어야 함
+                        "/api/system/companies", // 회원가입 시 회사 목록 조회가 필요함
                         "/error"
                 );
     }

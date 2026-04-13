@@ -20,6 +20,12 @@ public class UserService {
         String encryptedPassword = PasswordUtils.encrypt(user.getPassword());
         user.setPassword(encryptedPassword);
         
+        // 권한(role)이 제공되지 않은 경우 기본값 '일반회원(2)'으로 설정
+        // TODO: 추후 수정 (프로필에서 관리자 권한 신청....)
+        if (user.getRole() == null) {
+            user.setRole(com.company.board.constant.UserRole.MEMBER.getCode());
+        }
+        
         userMapper.save(user);
     }
 

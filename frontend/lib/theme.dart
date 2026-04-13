@@ -24,10 +24,19 @@ class AppTheme {
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: Colors.grey[50],
+      fillColor: const Color(0xFFF1F3F4), // 기존보다 살짝 더 어두운 회색으로 구분감 부여
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide:
+            BorderSide(color: Colors.grey[300]!, width: 0.5), // 연한 테두리 추가
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: primaryBlue, width: 1.5),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
     ),
@@ -52,13 +61,13 @@ class AppTheme {
       primary: primaryBlue,
       surface: const Color(0xFF121212),
     ),
-    scaffoldBackgroundColor: const Color(0xFF101010),
-    cardTheme: CardThemeData(
-      color: const Color(0xFF1E1E1E),
+    scaffoldBackgroundColor: const Color(0xFF000000), // 아주 어두운 배경 (대비 강화)
+    cardTheme: const CardThemeData(
+      color: Color(0xFF1E1E1E),
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.white.withOpacity(0.05)),
+        borderRadius: BorderRadius.all(Radius.circular(16)),
+        side: BorderSide(color: Colors.white12),
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(

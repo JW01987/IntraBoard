@@ -31,7 +31,6 @@ public class UserController {
     public ResponseEntity<ApiResponse<User>> login(@RequestBody User loginUser, HttpServletRequest request) {
         // 아이디와 비밀번호만 꺼내서 서비스 로직으로 검사
         User user = userService.login(loginUser.getLoginId(), loginUser.getPassword());
-
         if (user != null) {
             user.setPassword(null);
 
