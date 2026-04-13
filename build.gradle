@@ -1,0 +1,4 @@
+// Root build configuration
+plugins {
+    id 'java'
+}

@@ -1,0 +1,46 @@
+# === Generic / IDE ===
+.DS_Store
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+out/
+bin/
+*.log
+
+# === Gradle (Root & Backend) ===
+.gradle/
+build/
+backend/build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# === Spring Boot (Backend) ===
+backend/src/main/resources/application.yml
+backend/src/main/resources/application-*.yml
+application.yml
+application.properties
+
+# === Flutter (Frontend) ===
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.packages
+**/build/
+**/.pub-cache/
+**/.pub/
+**/ios/Flutter/.last_build_id
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
+**/android/local.properties
+**/android/key.properties
+**/android/.gradle
+frontend/error.log
+
+# === Repository Specific ===
+uploads/
+backend/uploads/
+node_modules/
+coverage/
+.tmp/
+docs/
