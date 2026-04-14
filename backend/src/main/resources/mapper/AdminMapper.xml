@@ -4,6 +4,22 @@
 
 <mapper namespace="com.company.board.mapper.AdminMapper">
 
+    <select id="getTotalPostCount" resultType="int">
+        SELECT COUNT(*) FROM post WHERE is_deleted = false
+    </select>
+
+    <select id="getInProgressCount" resultType="int">
+        SELECT COUNT(*) FROM post WHERE status_id = 1 AND is_deleted = false
+    </select>
+
+    <select id="getDoneCount" resultType="int">
+        SELECT COUNT(*) FROM post WHERE status_id = 3 AND is_deleted = false
+    </select>
+
+    <select id="getEmergencyCount" resultType="int">
+        SELECT COUNT(*) FROM post WHERE priority = 4 AND is_deleted = false
+    </select>
+
     <select id="getPostStatusStats" resultType="map">
         SELECT s.status_name as statusName, COUNT(p.post_id) as count
         FROM post_status s

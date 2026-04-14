@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:go_router/go_router.dart';
+import 'package:lucide_flutter/lucide_flutter.dart';
 import '../config/api_config.dart';
 import '../models/company_model.dart';
 
@@ -142,7 +143,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         const SizedBox(height: 40),
         IconButton(
           onPressed: () => context.pop(),
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(LucideIcons.arrowLeft),
         ),
         const SizedBox(height: 20),
         Text('회원가입',
@@ -166,7 +167,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           decoration: InputDecoration(
             hintText: '비밀번호 입력',
             suffixIcon: IconButton(
-              icon: Icon(_isObscurePw ? Icons.visibility_off : Icons.visibility),
+              icon: Icon(_isObscurePw ? LucideIcons.eyeOff : LucideIcons.eye),
               onPressed: () => setState(() => _isObscurePw = !_isObscurePw),
             ),
           ),
@@ -179,7 +180,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           decoration: InputDecoration(
             hintText: '비밀번호 다시 입력',
             suffixIcon: IconButton(
-              icon: Icon(_isObscureConfirm ? Icons.visibility_off : Icons.visibility),
+              icon: Icon(_isObscureConfirm ? LucideIcons.eyeOff : LucideIcons.eye),
               onPressed: () => setState(() => _isObscureConfirm = !_isObscureConfirm),
             ),
           ),
@@ -198,7 +199,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             const Tooltip(
               message: '소속회사가 없으면 관리자에게 문의주세요',
               triggerMode: TooltipTriggerMode.tap, // 모바일에서도 탭하면 보이게 설정
-              child: Icon(Icons.help_outline, size: 16, color: Colors.grey),
+              child: Icon(LucideIcons.helpCircle, size: 16, color: Colors.grey),
             ),
           ],
         ),

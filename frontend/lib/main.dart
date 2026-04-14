@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_flutter/lucide_flutter.dart';
 import 'theme.dart';
 import 'providers/user_provider.dart';
 import 'screens/placeholder_screens.dart';
 import 'screens/register_screen.dart';
+import 'screens/main_layout.dart';
+import 'screens/home_screen.dart';
+import 'screens/post_list_screen.dart';
 
 void main() {
   runApp(
@@ -51,22 +55,37 @@ class _MyAppState extends State<MyApp> {
         GoRoute(
             path: '/register',
             builder: (context, state) => const RegisterScreen()),
-        GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
-        GoRoute(
-            path: '/notice',
-            builder: (context, state) => const PostListScreen(title: '공지사항')),
-        GoRoute(
-            path: '/issue',
-            builder: (context, state) => const PostListScreen(title: '이슈문의')),
-        GoRoute(
-            path: '/archive',
-            builder: (context, state) => const PostListScreen(title: '자료실')),
-        GoRoute(
-            path: '/post/:id',
-            builder: (context, state) =>
-                PostDetailScreen(id: state.pathParameters['id'])),
-        GoRoute(
-            path: '/write', builder: (context, state) => const WriteScreen()),
+        // 인증이 필요한 화면들을 ShellRoute로 그룹화
+        ShellRoute(
+          builder: (context, state, child) => MainLayout(child: child),
+          routes: [
+            GoRoute(
+                path: '/home', builder: (context, state) => const HomeScreen()),
+            GoRoute(
+                path: '/notice',
+                builder: (context, state) =>
+                    const PostListScreen(title: '공지사항', boardType: 'NOTICE')),
+            GoRoute(
+                path: '/issue',
+                builder: (context, state) =>
+                    const PostListScreen(title: '이슈문의', boardType: 'ISSUE')),
+            GoRoute(
+                path: '/archive',
+                builder: (context, state) =>
+                    const PostListScreen(title: '자료실', boardType: 'ARCHIVE')),
+            GoRoute(
+                path: '/faq',
+                builder: (context, state) =>
+                    const PostListScreen(title: 'FAQ', boardType: 'FAQ')),
+            GoRoute(
+                path: '/post/:id',
+                builder: (context, state) =>
+                    PostDetailScreen(id: state.pathParameters['id'])),
+            GoRoute(
+                path: '/write',
+                builder: (context, state) => const WriteScreen()),
+          ],
+        ),
       ],
     );
   }
@@ -101,11 +120,9 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       body: LayoutBuilder(
         builder: (context, constraints) {
-          // 웹/데스크탑 환경
           if (constraints.maxWidth > 600) {
             return Center(
               child: Card(
-                // theme.dart에서 설정한 CardTheme 적용
                 child: Container(
                   width: 450,
                   padding: const EdgeInsets.all(40),
@@ -114,7 +131,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             );
           }
-          // 모바일 환경
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24.0),
             child: Center(child: _buildLoginForm(context)),
@@ -135,7 +151,7 @@ class _LoginScreenState extends State<LoginScreen> {
         Center(
           child: Column(
             children: [
-              Icon(Icons.dashboard_customize_rounded,
+              Icon(LucideIcons.layoutDashboard,
                   size: 48, color: colorScheme.primary),
               const SizedBox(height: 16),
               Text(
@@ -167,57 +183,54 @@ class _LoginScreenState extends State<LoginScreen> {
         TextField(
           controller: _pwController,
           obscureText: _isObscure,
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(
+                RegExp(r'[a-zA-Z0-9!@#\$%^&*()_\-+=~`<>]')),
+          ],
           decoration: InputDecoration(
             hintText: '비밀번호를 입력하세요',
             suffixIcon: IconButton(
-              icon: Icon(_isObscure ? Icons.visibility_off : Icons.visibility),
+              icon: Icon(_isObscure ? LucideIcons.eyeOff : LucideIcons.eye),
               onPressed: () => setState(() => _isObscure = !_isObscure),
             ),
           ),
         ),
         const SizedBox(height: 32),
-        FilledButton(
-          onPressed: () async {
-            final id = _idController.text.trim();
-            final pw = _pwController.text.trim();
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton(
+            onPressed: () async {
+              final id = _idController.text.trim();
+              final pw = _pwController.text.trim();
 
-            if (id.isEmpty || pw.isEmpty) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('아이디와 비밀번호를 입력해주세요.')),
-              );
-              return;
-            }
-
-            // 영문/숫자/특수문자만 허용 검증 (정규식)
-            final validPattern = RegExp(r'^[a-zA-Z0-9!@#\$%^&*()_\-+=~`<>]+$');
-            if (!validPattern.hasMatch(id) || !validPattern.hasMatch(pw)) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                    content: Text('아이디와 비밀번호는 영문, 숫자, 특수문자만 가능합니다.')),
-              );
-              return;
-            }
-
-            final success = await context.read<UserProvider>().login(id, pw);
-
-            if (success) {
-              if (mounted) {
+              if (id.isEmpty || pw.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('로그인 성공!')),
+                  const SnackBar(content: Text('아이디와 비밀번호를 모두 입력해주세요.')),
                 );
-                // TODO: 홈 화면으로 이동
+                return;
               }
-            } else {
-              if (mounted) {
+
+              final validPattern =
+                  RegExp(r'^[a-zA-Z0-9!@#\$%^&*()_\-+=~`<>]+$');
+              if (!validPattern.hasMatch(id) || !validPattern.hasMatch(pw)) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('로그인 실패. 정보를 확인해주세요.')),
+                  const SnackBar(
+                      content: Text('아이디와 비밀번호는 영문, 숫자, 특수문자만 가능합니다.')),
+                );
+                return;
+              }
+
+              final success = await context.read<UserProvider>().login(id, pw);
+              if (!success && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('로그인 실패: 정보를 확인하세요.')),
                 );
               }
-            }
-          },
-          child: const Text('로그인'),
+            },
+            child: const Text('로그인'),
+          ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 24),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // 브랜드 포인트 컬러
   static const Color primaryBlue = Color(0xFF1A73E8);
 
   // Light Theme
-  static ThemeData lightTheme = ThemeData(
+  static ThemeData get lightTheme => ThemeData(
     useMaterial3: true,
     colorScheme: ColorScheme.fromSeed(
       seedColor: primaryBlue,
@@ -13,6 +14,7 @@ class AppTheme {
       primary: primaryBlue,
       surface: Colors.white,
     ),
+    textTheme: GoogleFonts.notoSansKrTextTheme(),
     scaffoldBackgroundColor: Colors.white,
     cardTheme: const CardThemeData(
       color: Colors.white,

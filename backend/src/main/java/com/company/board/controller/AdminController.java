@@ -31,10 +31,14 @@ public class AdminController {
         }
 
         Map<String, Object> result = new HashMap<>();
+        result.put("totalPosts", adminMapper.getTotalPostCount());
+        result.put("inProgressIssues", adminMapper.getInProgressCount());
+        result.put("doneIssues", adminMapper.getDoneCount());
+        result.put("emergencyIssues", adminMapper.getEmergencyCount());
         result.put("statusStats", adminMapper.getPostStatusStats());
         result.put("priorityStats", adminMapper.getPostPriorityStats());
         result.put("categoryStats", adminMapper.getPostCategoryStats());
-
+        
         return ResponseEntity.ok(ApiResponse.success("대시보드 통계 조회 성공", result));
     }
 }

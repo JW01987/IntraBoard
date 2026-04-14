@@ -6,6 +6,12 @@ import java.util.Map;
 
 @Mapper
 public interface AdminMapper {
+    // 핵심 지표 요약
+    int getTotalPostCount();
+    int getInProgressCount();
+    int getDoneCount();
+    int getEmergencyCount();
+
     // 상태별 게시글 통계
     List<Map<String, Object>> getPostStatusStats();
     
