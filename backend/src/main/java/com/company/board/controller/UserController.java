@@ -74,4 +74,10 @@ public class UserController {
         userService.updateUserRole(targetUserId, roleUpdateData.getRole());
         return ResponseEntity.ok(ApiResponse.success("유저 권한이 성공적으로 변경되었습니다."));
     }
+
+    // 5. 담당자 후보 목록 API (이슈 할당용)
+    @GetMapping("/staff")
+    public ResponseEntity<ApiResponse<java.util.List<User>>> getStaffList() {
+        return ResponseEntity.ok(ApiResponse.success("담당자 후보 목록 조회 성공", userService.getStaffList()));
+    }
 }

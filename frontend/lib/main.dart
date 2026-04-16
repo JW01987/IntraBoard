@@ -10,6 +10,8 @@ import 'screens/register_screen.dart';
 import 'screens/main_layout.dart';
 import 'screens/home_screen.dart';
 import 'screens/post_list_screen.dart';
+import 'screens/post_detail_screen.dart';
+import 'screens/write_screen.dart';
 
 void main() {
   runApp(
@@ -82,8 +84,10 @@ class _MyAppState extends State<MyApp> {
                 builder: (context, state) =>
                     PostDetailScreen(id: state.pathParameters['id'])),
             GoRoute(
-                path: '/write',
-                builder: (context, state) => const WriteScreen()),
+                path: '/write/:boardType',
+                builder: (context, state) => WriteScreen(
+                      boardType: state.pathParameters['boardType'] ?? 'NOTICE',
+                    )),
           ],
         ),
       ],

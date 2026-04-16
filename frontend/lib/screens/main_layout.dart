@@ -93,12 +93,15 @@ class _MobileLayout extends StatelessWidget {
     final user = userProvider.user;
     final isAdmin = user?.role == 1;
     final currentLocation = GoRouterState.of(context).matchedLocation;
+    final isSubPage = currentLocation.startsWith('/post/') || currentLocation.startsWith('/write/');
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('IntraBoard'),
-        centerTitle: false,
-      ),
+      appBar: isSubPage 
+        ? null // 서브페이지(글쓰기, 상세 등)에서는 자식 위젯의 AppBar를 사용하도록 숨김
+        : AppBar(
+            title: const Text('IntraBoard'),
+            centerTitle: false,
+          ),
       drawer: Drawer(
         child: Column(
           children: [

@@ -1,3 +1,5 @@
+import 'post_file_model.dart';
+
 class PostModel {
   final int? postId;
   final String boardType;
@@ -11,6 +13,7 @@ class PostModel {
   final int? statusId;
   final int? priority;
   final DateTime? createdAt;
+  final List<PostFileModel> files;
 
   PostModel({
     this.postId,
@@ -25,6 +28,7 @@ class PostModel {
     this.statusId,
     this.priority,
     this.createdAt,
+    this.files = const [],
   });
 
   factory PostModel.fromJson(Map<String, dynamic> json) {
@@ -42,6 +46,11 @@ class PostModel {
       priority: json['priority'],
       createdAt:
           json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
+      files: json['files'] != null
+          ? (json['files'] as List)
+              .map((e) => PostFileModel.fromJson(e))
+              .toList()
+          : [],
     );
   }
 }

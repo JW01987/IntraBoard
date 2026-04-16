@@ -6,7 +6,16 @@
 
     <insert id="save" useGeneratedKeys="true" keyProperty="postId">
         INSERT INTO post (board_type, user_id, status_id, category_id, priority, assigned_user_id, title, content)
-        VALUES (#{boardType}, #{userId}, #{statusId}, #{categoryId}, #{priority}, #{assignedUserId}, #{title}, #{content})
+        VALUES (
+            #{boardType}, 
+            #{userId}, 
+            #{statusId, jdbcType=INTEGER}, 
+            #{categoryId, jdbcType=BIGINT}, 
+            #{priority, jdbcType=TINYINT}, 
+            #{assignedUserId, jdbcType=BIGINT}, 
+            #{title}, 
+            #{content}
+        )
     </insert>
 
     <!-- 읽어올 땐 is_deleted가 false(0)인 살아있는 글만 -->

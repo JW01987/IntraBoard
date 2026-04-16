@@ -127,7 +127,7 @@ class _PostListScreenState extends State<PostListScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push('/write'),
+        onPressed: () => context.push('/write/${widget.boardType}'),
         child: const Icon(LucideIcons.penLine),
       ),
     );

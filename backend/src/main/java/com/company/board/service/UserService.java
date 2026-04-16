@@ -52,4 +52,9 @@ public class UserService {
     public void updateUserRole(Long userId, Integer role) {
         userMapper.updateRole(userId, role);
     }
+
+    // 5. 담당자 후보 목록 조회 (본사 직원)
+    public java.util.List<User> getStaffList() {
+        return userMapper.findStaffUsers();
+    }
 }
