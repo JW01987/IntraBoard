@@ -46,13 +46,27 @@ class _HomeScreenState extends State<HomeScreen> {
           if (statsRes.statusCode == 200) {
             _stats = jsonDecode(statsRes.body)['data'];
           }
+          
           if (noticeRes.statusCode == 200) {
-            final data = jsonDecode(noticeRes.body)['data']['posts'] as List;
-            _notices = data.map((e) => PostModel.fromJson(e)).toList();
+            final responseBody = jsonDecode(noticeRes.body);
+            final data = responseBody['data'];
+            if (data != null && data['posts'] != null) {
+              final List list = data['posts'];
+              _notices = list.map((e) => PostModel.fromJson(e)).toList();
+            } else {
+              _notices = [];
+            }
           }
+          
           if (issueRes.statusCode == 200) {
-            final data = jsonDecode(issueRes.body)['data']['posts'] as List;
-            _issues = data.map((e) => PostModel.fromJson(e)).toList();
+            final responseBody = jsonDecode(issueRes.body);
+            final data = responseBody['data'];
+            if (data != null && data['posts'] != null) {
+              final List list = data['posts'];
+              _issues = list.map((e) => PostModel.fromJson(e)).toList();
+            } else {
+              _issues = [];
+            }
           }
           _isLoading = false;
         });

@@ -77,10 +77,13 @@ class _PostListScreenState extends State<PostListScreen> {
       'keyword': _searchController.text,
       'startDate': startDate,
       'endDate': endDate,
-      'statusId': _statusId?.toString() ?? '',
       'page': page.toString(),
       'size': '10',
     };
+
+    if (_statusId != null) {
+      queryParams['statusId'] = _statusId!.toString();
+    }
 
     final uri = Uri.parse('${ApiConfig.baseUrl}/api/posts')
         .replace(queryParameters: queryParams);
@@ -89,15 +92,27 @@ class _PostListScreenState extends State<PostListScreen> {
       final response = await http.get(uri,
           headers: ApiConfig.getHeaders(userProvider.sessionCookie));
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body)['data'];
-        final List list = data['posts'];
-        setState(() {
-          _posts = list.map((e) => PostModel.fromJson(e)).toList();
-          _currentPage = data['currentPage'];
-          _totalPages = data['totalPages'];
-          _totalCount = data['totalCount'];
-          _isLoading = false;
-        });
+        final responseBody = jsonDecode(response.body);
+        final data = responseBody['data'];
+        
+        if (data != null && data['posts'] != null) {
+          final List list = data['posts'];
+          setState(() {
+            _posts = list.map((e) => PostModel.fromJson(e)).toList();
+            _currentPage = data['currentPage'] ?? 1;
+            _totalPages = data['totalPages'] ?? 1;
+            _totalCount = data['totalCount'] ?? 0;
+            _isLoading = false;
+          });
+        } else {
+          setState(() {
+            _posts = [];
+            _currentPage = 1;
+            _totalPages = 1;
+            _totalCount = 0;
+            _isLoading = false;
+          });
+        }
       }
     } catch (e) {
       debugPrint('Fetch Posts Error: $e');
