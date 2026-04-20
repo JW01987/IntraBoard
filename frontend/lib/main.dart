@@ -88,6 +88,12 @@ class _MyAppState extends State<MyApp> {
                 builder: (context, state) => WriteScreen(
                       boardType: state.pathParameters['boardType'] ?? 'NOTICE',
                     )),
+            GoRoute(
+                path: '/edit/:boardType/:id',
+                builder: (context, state) => WriteScreen(
+                      boardType: state.pathParameters['boardType'] ?? 'NOTICE',
+                      postId: state.pathParameters['id'],
+                    )),
           ],
         ),
       ],

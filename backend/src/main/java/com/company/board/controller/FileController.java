@@ -4,11 +4,16 @@ import com.company.board.common.ApiResponse;
 import com.company.board.domain.PostFile;
 import com.company.board.service.FileService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,5 +49,46 @@ public class FileController {
         }
         
         return ResponseEntity.ok(ApiResponse.success("파일 업로드 성공", resultList));
+    }
+
+    @GetMapping("/download/{savedName}")
+    public ResponseEntity<Resource> downloadFile(@PathVariable String savedName, @RequestParam("originName") String originName, HttpServletRequest request) {
+        Resource resource = fileService.loadFileAsResource(savedName);
+        if (resource == null) return ResponseEntity.notFound().build();
+
+        String contentType = null;
+        try {
+            contentType = request.getServletContext().getMimeType(resource.getFile().getAbsolutePath());
+        } catch (IOException ex) {
+            contentType = "application/octet-stream";
+        }
+
+        if (contentType == null) {
+            contentType = "application/octet-stream";
+        }
+
+        String encodedFileName = URLEncoder.encode(originName, StandardCharsets.UTF_8).replace("+", "%20");
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + encodedFileName + "\"")
+                .body(resource);
+    }
+
+    @GetMapping("/display/{savedName}")
+    public ResponseEntity<Resource> displayFile(@PathVariable String savedName, HttpServletRequest request) {
+        Resource resource = fileService.loadFileAsResource(savedName);
+        if (resource == null) return ResponseEntity.notFound().build();
+
+        String contentType = null;
+        try {
+            contentType = request.getServletContext().getMimeType(resource.getFile().getAbsolutePath());
+        } catch (IOException ex) {
+            contentType = "application/octet-stream";
+        }
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType != null ? contentType : "application/octet-stream"))
+                .body(resource);
     }
 }

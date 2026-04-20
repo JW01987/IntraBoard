@@ -6,9 +6,11 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_flutter/lucide_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_html/flutter_html.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../config/api_config.dart';
 import '../providers/user_provider.dart';
 import '../models/post_model.dart';
+import '../models/post_file_model.dart';
 import '../models/comment_model.dart';
 import '../utils/responsive.dart';
 
@@ -26,15 +28,44 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   PostModel? _post;
   List<CommentModel> _comments = [];
   final TextEditingController _commentController = TextEditingController();
-  
+
   // 대댓글용 상태
   int? _replyToCommentId;
   String? _replyToAuthorName;
+
+  // 댓글 스크롤 이동 및 포커스를 위한 상태
+  final Map<int, GlobalKey> _commentKeys = {};
+  int? _highlightedCommentId;
 
   @override
   void initState() {
     super.initState();
     _fetchDetail();
+  }
+
+  void _scrollToAndHighlightComment(int commentId) {
+    final targetKey = _commentKeys[commentId];
+    if (targetKey != null && targetKey.currentContext != null) {
+      Scrollable.ensureVisible(
+        targetKey.currentContext!,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+        alignment: 0.5, // 0.5 = 화면 수직 중앙 정렬
+      );
+
+      setState(() {
+        _highlightedCommentId = commentId;
+      });
+
+      // 1.5초 후 배경 하이라이트 효과 원상복구
+      Future.delayed(const Duration(milliseconds: 1500), () {
+        if (mounted && _highlightedCommentId == commentId) {
+          setState(() {
+            _highlightedCommentId = null;
+          });
+        }
+      });
+    }
   }
 
   Future<void> _fetchDetail() async {
@@ -46,7 +77,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
 
     try {
       // 1. 게시글 상세 조회
-      final postRes = await http.get(Uri.parse('${ApiConfig.baseUrl}/api/posts/${widget.id}'), headers: headers);
+      final postRes = await http.get(
+          Uri.parse('${ApiConfig.baseUrl}/api/posts/${widget.id}'),
+          headers: headers);
       if (postRes.statusCode == 200) {
         final data = jsonDecode(postRes.body)['data'];
         if (data != null) {
@@ -55,7 +88,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       }
 
       // 2. 댓글 목록 조회
-      final commentRes = await http.get(Uri.parse('${ApiConfig.baseUrl}/api/comments/post/${widget.id}'), headers: headers);
+      final commentRes = await http.get(
+          Uri.parse('${ApiConfig.baseUrl}/api/comments/post/${widget.id}'),
+          headers: headers);
       if (commentRes.statusCode == 200) {
         final List list = jsonDecode(commentRes.body)['data'];
         _comments = list.map((e) => CommentModel.fromJson(e)).toList();
@@ -70,7 +105,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
 
   Future<void> _submitComment() async {
     if (_commentController.text.trim().isEmpty) return;
-    
+
     final userProvider = context.read<UserProvider>();
     final headers = ApiConfig.getHeaders(userProvider.sessionCookie);
 
@@ -94,7 +129,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         _fetchDetail();
         FocusScope.of(context).unfocus();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('댓글 등록에 실패했습니다.')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('댓글 등록에 실패했습니다.')));
       }
     } catch (e) {
       debugPrint('Comment Submit Error: $e');
@@ -103,16 +139,20 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
 
   Future<void> _deletePost() async {
     final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('게시글 삭제'),
-        content: const Text('정말로 이 게시글을 삭제하시겠습니까?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('취소')),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('삭제', style: TextStyle(color: Colors.red))),
-        ],
-      )
-    );
+        context: context,
+        builder: (ctx) => AlertDialog(
+              title: const Text('게시글 삭제'),
+              content: const Text('정말로 이 게시글을 삭제하시겠습니까?'),
+              actions: [
+                TextButton(
+                    onPressed: () => Navigator.pop(ctx, false),
+                    child: const Text('취소')),
+                TextButton(
+                    onPressed: () => Navigator.pop(ctx, true),
+                    child:
+                        const Text('삭제', style: TextStyle(color: Colors.red))),
+              ],
+            ));
 
     if (confirm != true) return;
 
@@ -123,7 +163,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         headers: ApiConfig.getHeaders(userProvider.sessionCookie),
       );
       if (res.statusCode == 200 && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('게시글이 삭제되었습니다.')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('게시글이 삭제되었습니다.')));
         context.pop(); // 목록으로 돌아가기
       }
     } catch (e) {
@@ -133,16 +174,20 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
 
   Future<void> _deleteComment(int commentId) async {
     final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('댓글 삭제'),
-        content: const Text('이 댓글을 삭제하시겠습니까?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('취소')),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('삭제', style: TextStyle(color: Colors.red))),
-        ],
-      )
-    );
+        context: context,
+        builder: (ctx) => AlertDialog(
+              title: const Text('댓글 삭제'),
+              content: const Text('이 댓글을 삭제하시겠습니까?'),
+              actions: [
+                TextButton(
+                    onPressed: () => Navigator.pop(ctx, false),
+                    child: const Text('취소')),
+                TextButton(
+                    onPressed: () => Navigator.pop(ctx, true),
+                    child:
+                        const Text('삭제', style: TextStyle(color: Colors.red))),
+              ],
+            ));
 
     if (confirm != true) return;
 
@@ -155,11 +200,86 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       if (res.statusCode == 200) {
         _fetchDetail();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('삭제 권한이 없습니다.')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('삭제 권한이 없습니다.')));
       }
     } catch (e) {
       debugPrint('Delete Comment Error: $e');
     }
+  }
+
+  Future<void> _updatePostStatus(int newStatusId) async {
+    if (_post == null) return;
+    setState(() => _isLoading = true);
+
+    final userProvider = context.read<UserProvider>();
+    final payload = {
+      'boardType': _post!.boardType,
+      'title': _post!.title,
+      'content': _post!.content,
+      'categoryId': _post!.categoryId,
+      'priority': _post!.priority,
+      'assignedUserId': _post!.assignedUserId,
+      'statusId': newStatusId,
+    };
+
+    try {
+      final res = await http.put(
+          Uri.parse('${ApiConfig.baseUrl}/api/posts/${widget.id}'),
+          headers: ApiConfig.getHeaders(userProvider.sessionCookie),
+          body: jsonEncode(payload));
+      if (res.statusCode == 200) {
+        _fetchDetail();
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('상태가 변경되었습니다.')));
+      } else {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('상태 변경에 실패했습니다.')));
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      debugPrint('Update Status Error: $e');
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Widget _buildStatusDropdown(int? currentStatus) {
+    return Container(
+      height: 28,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        color: currentStatus == 2
+            ? Colors.green.withOpacity(0.1)
+            : Colors.orange.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(
+            color: currentStatus == 2 ? Colors.green : Colors.orange),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<int>(
+          value: currentStatus,
+          isDense: true,
+          icon: Icon(LucideIcons.chevronDown,
+              size: 14,
+              color: currentStatus == 2 ? Colors.green : Colors.orange),
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: currentStatus == 2 ? Colors.green : Colors.orange,
+          ),
+          items: const [
+            DropdownMenuItem(value: 1, child: Text('진행중')),
+            DropdownMenuItem(value: 2, child: Text('완료')),
+            DropdownMenuItem(value: 3, child: Text('미해결')),
+          ],
+          onChanged: (val) {
+            if (val != null && val != currentStatus) {
+              _updatePostStatus(val);
+            }
+          },
+        ),
+      ),
+    );
   }
 
   @override
@@ -180,7 +300,11 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
 
     final post = _post!;
     final currentUser = context.read<UserProvider>().user;
-    final isAuthorOrAdmin = currentUser?.role == 1 || currentUser?.userId == post.userId;
+    final isAuthorOrAdmin =
+        currentUser?.role == 1 || currentUser?.userId == post.userId;
+    final canChangeStatus = isAuthorOrAdmin ||
+        (post.assignedUserId != null &&
+            currentUser?.userId == post.assignedUserId);
 
     return Scaffold(
       appBar: AppBar(
@@ -195,11 +319,17 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               icon: const Icon(LucideIcons.moreVertical),
               itemBuilder: (context) => [
                 const PopupMenuItem(value: 'edit', child: Text('수정')),
-                const PopupMenuItem(value: 'delete', child: Text('삭제', style: TextStyle(color: Colors.red))),
+                const PopupMenuItem(
+                    value: 'delete',
+                    child: Text('삭제', style: TextStyle(color: Colors.red))),
               ],
-              onSelected: (val) {
+              onSelected: (val) async {
                 if (val == 'edit') {
-                  // TODO: 글쓰기 화면으로 파라미터 넘겨 수정 진입
+                  final result = await context
+                      .push('/edit/${post.boardType}/${post.postId}');
+                  if (result == true) {
+                    _fetchDetail(); // 수정 성공 시 상세 내용 다시 불러오기
+                  }
                 } else if (val == 'delete') {
                   _deletePost();
                 }
@@ -210,7 +340,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       body: Center(
         child: Container(
           // 웹에서는 900px 최대 너비 중앙 정렬
-          constraints: context.isMobile ? null : const BoxConstraints(maxWidth: 900),
+          constraints:
+              context.isMobile ? null : const BoxConstraints(maxWidth: 900),
           child: Column(
             children: [
               Expanded(
@@ -220,7 +351,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // 상단 헤더 (제목, 정보)
-                      _buildPostHeader(post),
+                      _buildPostHeader(post, canChangeStatus),
                       const SizedBox(height: 24),
                       const Divider(),
                       const SizedBox(height: 24),
@@ -235,9 +366,12 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
 
                       // 댓글 리스트
                       const SizedBox(height: 16),
-                      Text('댓글 ${_comments.length}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      Text('댓글 ${_comments.length}',
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 16)),
                       const SizedBox(height: 16),
-                      ..._comments.map((e) => _buildCommentItem(e, currentUser?.userId, currentUser?.role)),
+                      ..._comments.map((e) => _buildCommentItem(
+                          e, currentUser?.userId, currentUser?.role)),
                     ],
                   ),
                 ),
@@ -251,23 +385,38 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     );
   }
 
-  Widget _buildPostHeader(PostModel post) {
+  Widget _buildPostHeader(PostModel post, bool canChangeStatus) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
             if (post.boardType == 'ISSUE') ...[
-              _buildBadge(post.statusId == 1 ? '진행중' : post.statusId == 2 ? '완료' : '미해결', 
-                          post.statusId == 2 ? Colors.green : Colors.orange),
+              if (canChangeStatus)
+                _buildStatusDropdown(post.statusId)
+              else
+                _buildBadge(
+                    post.statusId == 1
+                        ? '진행중'
+                        : post.statusId == 2
+                            ? '완료'
+                            : '미해결',
+                    post.statusId == 2 ? Colors.green : Colors.orange),
               const SizedBox(width: 8),
-              _buildBadge(post.priority == 4 ? '긴급' : post.priority == 3 ? '높음' : '보통', 
-                          post.priority == 4 ? Colors.red : Colors.blue, outlined: true),
+              _buildBadge(
+                  post.priority == 4
+                      ? '긴급'
+                      : post.priority == 3
+                          ? '높음'
+                          : '보통',
+                  post.priority == 4 ? Colors.red : Colors.blue,
+                  outlined: true),
             ],
           ],
         ),
         const SizedBox(height: 12),
-        Text(post.title, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+        Text(post.title,
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
         const SizedBox(height: 16),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -277,14 +426,18 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                 CircleAvatar(
                   radius: 16,
                   backgroundColor: Colors.grey[200],
-                  child: const Icon(LucideIcons.user, size: 16, color: Colors.grey),
+                  child: const Icon(LucideIcons.user,
+                      size: 16, color: Colors.grey),
                 ),
                 const SizedBox(width: 8),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(post.authorName ?? '알 수 없음', style: const TextStyle(fontWeight: FontWeight.bold)),
-                    Text(post.authorCompany ?? '', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                    Text(post.authorName ?? '알 수 없음',
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text(post.authorCompany ?? '',
+                        style:
+                            const TextStyle(fontSize: 12, color: Colors.grey)),
                   ],
                 ),
               ],
@@ -292,9 +445,13 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(DateFormat('yyyy-MM-dd HH:mm').format(post.createdAt ?? DateTime.now()), style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                Text(
+                    DateFormat('yyyy-MM-dd HH:mm')
+                        .format(post.createdAt ?? DateTime.now()),
+                    style: const TextStyle(color: Colors.grey, fontSize: 12)),
                 const SizedBox(height: 4),
-                Text('조회 ${post.viewCount}', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                Text('조회 ${post.viewCount}',
+                    style: const TextStyle(color: Colors.grey, fontSize: 12)),
               ],
             ),
           ],
@@ -303,102 +460,258 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     );
   }
 
+  bool _isImageFile(String filename) {
+    final ext = filename.split('.').last.toLowerCase();
+    return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].contains(ext);
+  }
+
+  Future<void> _downloadFile(PostFileModel file) async {
+    final encodedOriginName = Uri.encodeComponent(file.originalName);
+    final url = Uri.parse(
+        '${ApiConfig.baseUrl}/api/files/download/${file.savedName}?originName=$encodedOriginName');
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('파일을 열 수 없습니다.')));
+      }
+    }
+  }
+
   Widget _buildAttachmentList(PostModel post) {
+    // 이미지와 일반 파일 분리
+    final imageFiles = post.files.where((f) => _isImageFile(f.originalName)).toList();
+    final otherFiles = post.files.where((f) => !_isImageFile(f.originalName)).toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('첨부파일', style: TextStyle(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        ...post.files.map((file) => Card(
-          elevation: 0,
-          color: Colors.grey[100],
-          margin: const EdgeInsets.only(bottom: 8),
-          child: ListTile(
-            leading: const Icon(LucideIcons.file),
-            title: Text(file.originalName, style: const TextStyle(fontSize: 14)),
-            subtitle: Text('${(file.fileSize / 1024).toStringAsFixed(1)} KB', style: const TextStyle(fontSize: 12)),
-            trailing: IconButton(
-              icon: const Icon(LucideIcons.download, size: 20),
-              onPressed: () {
-                // TODO: 파일 다운로드 로직
-              },
-            ),
+        Row(
+          children: [
+            const Icon(LucideIcons.paperclip, size: 16),
+            const SizedBox(width: 6),
+            Text('첨부파일 ${post.files.length}개',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+          ],
+        ),
+        const SizedBox(height: 12),
+
+        // 이미지 인라인 미리보기
+        if (imageFiles.isNotEmpty) ...[
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: imageFiles.map((file) {
+              final displayUrl = '${ApiConfig.baseUrl}/api/files/display/${file.savedName}';
+              return GestureDetector(
+                onTap: () => _downloadFile(file),
+                child: Tooltip(
+                  message: '클릭하여 다운로드',
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      displayUrl,
+                      width: 160,
+                      height: 120,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                        width: 160,
+                        height: 120,
+                        color: Colors.grey[200],
+                        child: const Icon(LucideIcons.imageOff, color: Colors.grey),
+                      ),
+                      loadingBuilder: (_, child, progress) {
+                        if (progress == null) return child;
+                        return Container(
+                          width: 160,
+                          height: 120,
+                          color: Colors.grey[100],
+                          child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
           ),
-        )),
+          const SizedBox(height: 12),
+        ],
+
+        // 일반 파일 목록
+        ...otherFiles.map((file) => Card(
+              elevation: 0,
+              color: Colors.grey[50],
+              margin: const EdgeInsets.only(bottom: 8),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  side: BorderSide(color: Colors.grey[200]!)),
+              child: ListTile(
+                leading: const Icon(LucideIcons.file, size: 20, color: Colors.blueGrey),
+                title: Text(file.originalName,
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                subtitle: Text(
+                    '${(file.fileSize / 1024).toStringAsFixed(1)} KB',
+                    style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                trailing: IconButton(
+                  icon: const Icon(LucideIcons.download, size: 20, color: Colors.blue),
+                  onPressed: () => _downloadFile(file),
+                  tooltip: '다운로드',
+                ),
+              ),
+            )),
         const SizedBox(height: 24),
       ],
     );
   }
 
-  Widget _buildCommentItem(CommentModel comment, int? currentUserId, int? currentUserRole) {
+  Widget _buildCommentItem(
+      CommentModel comment, int? currentUserId, int? currentUserRole) {
     bool isMyComment = comment.userId == currentUserId || currentUserRole == 1;
     bool isReply = comment.parentId != null && comment.parentId! > 0;
 
+    final key = _commentKeys.putIfAbsent(comment.commentId, () => GlobalKey());
+
+    CommentModel? parentComment;
+    if (isReply) {
+      try {
+        parentComment =
+            _comments.firstWhere((c) => c.commentId == comment.parentId);
+      } catch (_) {}
+    }
+
     if (comment.isDeleted) {
       return Padding(
+        key: key,
         padding: EdgeInsets.only(left: isReply ? 32.0 : 0, bottom: 16.0),
-        child: const Text('삭제된 댓글입니다.', style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic)),
+        child: const Text('삭제된 댓글입니다.',
+            style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic)),
       );
     }
 
-    return Padding(
-      padding: EdgeInsets.only(left: isReply ? 40.0 : 0, bottom: 16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return AnimatedContainer(
+        duration: const Duration(milliseconds: 600),
+        color: _highlightedCommentId == comment.commentId
+            ? Colors.yellow.withOpacity(0.2) // 하이라이트 배경색
+            : Colors.transparent,
+        padding: const EdgeInsets.only(top: 8.0, bottom: 8.0), // 하이라이트 영역 확보
+        child: Padding(
+          key: key,
+          padding: EdgeInsets.only(left: isReply ? 32.0 : 8.0, right: 8.0),
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (isReply) const Padding(
-                padding: EdgeInsets.only(right: 8.0, top: 2.0),
-                child: Icon(LucideIcons.cornerDownRight, size: 16, color: Colors.grey),
-              ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (isReply)
+                    const Padding(
+                      padding: EdgeInsets.only(right: 8.0, top: 2.0),
+                      child: Icon(LucideIcons.cornerDownRight,
+                          size: 16, color: Colors.grey),
+                    ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('${comment.authorName}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                        const SizedBox(width: 8),
-                        Text(DateFormat('MM-dd HH:mm').format(comment.createdAt ?? DateTime.now()), style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                        Row(
+                          children: [
+                            Text('${comment.authorName}',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 13)),
+                            if (comment.authorRole == 1)
+                              Container(
+                                margin: const EdgeInsets.only(left: 4),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 4, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.red[50],
+                                  border: Border.all(color: Colors.red[200]!),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: const Text('관리자',
+                                    style: TextStyle(
+                                        fontSize: 9,
+                                        color: Colors.red,
+                                        fontWeight: FontWeight.bold)),
+                              ),
+                            const SizedBox(width: 8),
+                            Text(
+                                DateFormat('MM-dd HH:mm').format(
+                                    comment.createdAt ?? DateTime.now()),
+                                style: const TextStyle(
+                                    fontSize: 11, color: Colors.grey)),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        if (isReply &&
+                            parentComment != null &&
+                            !parentComment.isDeleted)
+                          InkWell(
+                            onTap: () {
+                              _scrollToAndHighlightComment(
+                                  parentComment!.commentId);
+                            },
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 8),
+                              margin: const EdgeInsets.only(bottom: 8, top: 4),
+                              decoration: BoxDecoration(
+                                  color: Colors.grey[100],
+                                  border: Border(
+                                      left: BorderSide(
+                                          color: Colors.blue[300]!, width: 4)),
+                                  borderRadius: const BorderRadius.only(
+                                      topRight: Radius.circular(4),
+                                      bottomRight: Radius.circular(4))),
+                              child: Text(
+                                '@${parentComment.authorName}님: ${parentComment.content.replaceAll('\n', ' ')}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                    color: Colors.grey, fontSize: 12),
+                              ),
+                            ),
+                          ),
+                        Text(comment.content,
+                            style: const TextStyle(fontSize: 14)),
                       ],
                     ),
-                    const SizedBox(height: 4),
-                    Text(comment.content, style: const TextStyle(fontSize: 14)),
-                  ],
-                ),
+                  ),
+                  // 대댓글 달기 버튼 (답글)
+                  InkWell(
+                    onTap: () {
+                      setState(() {
+                        _replyToCommentId = comment.commentId;
+                        _replyToAuthorName = comment.authorName;
+                      });
+                      _commentController.clear();
+                      FocusScope.of(context).requestFocus();
+                    },
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8),
+                      child: Text('답글',
+                          style: TextStyle(fontSize: 12, color: Colors.blue)),
+                    ),
+                  ),
+                  // 내 댓글이거나 관리자면 삭제
+                  if (isMyComment)
+                    InkWell(
+                      onTap: () => _deleteComment(comment.commentId),
+                      child: const Padding(
+                        padding: EdgeInsets.only(left: 8),
+                        child: Text('삭제',
+                            style: TextStyle(fontSize: 12, color: Colors.red)),
+                      ),
+                    ),
+                ],
               ),
-              // 대댓글 달기 버튼 (답글)
-              if (!isReply)
-                InkWell(
-                  onTap: () {
-                    setState(() {
-                      _replyToCommentId = comment.commentId;
-                      _replyToAuthorName = comment.authorName;
-                    });
-                    // Focus textarea (생략)
-                  },
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8),
-                    child: Text('답글', style: TextStyle(fontSize: 12, color: Colors.blue)),
-                  ),
-                ),
-              // 내 댓글이거나 관리자면 삭제
-              if (isMyComment)
-                InkWell(
-                  onTap: () => _deleteComment(comment.commentId),
-                  child: const Padding(
-                    padding: EdgeInsets.only(left: 8),
-                    child: Text('삭제', style: TextStyle(fontSize: 12, color: Colors.red)),
-                  ),
-                ),
+              const Divider(height: 24, thickness: 0.5),
             ],
           ),
-          const Divider(height: 24, thickness: 0.5),
-        ],
-      ),
-    );
+        ));
   }
 
   Widget _buildCommentInputBase() {
@@ -407,7 +720,11 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         color: Theme.of(context).scaffoldBackgroundColor,
         border: Border(top: BorderSide(color: Colors.grey[300]!)),
       ),
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 8, top: 8, left: 16, right: 16),
+      padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).padding.bottom + 8,
+          top: 8,
+          left: 16,
+          right: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -416,15 +733,25 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
             Container(
               padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
               margin: const EdgeInsets.only(bottom: 8),
-              decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(4)),
+              decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(4)),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('$_replyToAuthorName님에게 답글 작성 중...', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                  Text('$_replyToAuthorName님에게 답글 작성 중...',
+                      style: const TextStyle(fontSize: 12, color: Colors.grey)),
                   const SizedBox(width: 8),
                   InkWell(
-                    onTap: () => setState(() { _replyToCommentId = null; _replyToAuthorName = null; }),
-                    child: const Icon(LucideIcons.x, size: 14, color: Colors.grey),
+                    onTap: () {
+                      setState(() {
+                        _replyToCommentId = null;
+                        _replyToAuthorName = null;
+                      });
+                      _commentController.clear();
+                    },
+                    child:
+                        const Icon(LucideIcons.x, size: 14, color: Colors.grey),
                   ),
                 ],
               ),
@@ -439,8 +766,11 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                   maxLines: 4,
                   decoration: InputDecoration(
                     hintText: '댓글을 입력하세요...',
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: BorderSide.none),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(24),
+                        borderSide: BorderSide.none),
                     filled: true,
                     fillColor: Colors.grey[100], // 라이트/다크 대응은 Theme에서 알아서
                   ),
@@ -448,9 +778,11 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               ),
               const SizedBox(width: 8),
               Container(
-                decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.blue),
+                decoration: const BoxDecoration(
+                    shape: BoxShape.circle, color: Colors.blue),
                 child: IconButton(
-                  icon: const Icon(LucideIcons.send, color: Colors.white, size: 18),
+                  icon: const Icon(LucideIcons.send,
+                      color: Colors.white, size: 18),
                   onPressed: _submitComment,
                 ),
               ),
@@ -469,7 +801,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           border: Border.all(color: color),
           borderRadius: BorderRadius.circular(4),
         ),
-        child: Text(label, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold)),
+        child: Text(label,
+            style: TextStyle(
+                color: color, fontSize: 12, fontWeight: FontWeight.bold)),
       );
     }
     return Container(
@@ -478,7 +812,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(4),
       ),
-      child: Text(label, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold)),
+      child: Text(label,
+          style: TextStyle(
+              color: color, fontSize: 12, fontWeight: FontWeight.bold)),
     );
   }
 }

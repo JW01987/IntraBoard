@@ -68,7 +68,11 @@ public class PostController {
         Post target = postService.getPostBasic(postId);
         User loginUser = (User) request.getSession(false).getAttribute("LOGIN_USER");
 
-        if (!target.getUserId().equals(loginUser.getUserId()) && !UserRole.isAdmin(loginUser.getRole())) {
+        boolean isAuthor = target.getUserId().equals(loginUser.getUserId());
+        boolean isAdmin = UserRole.isAdmin(loginUser.getRole());
+        boolean isAssignee = target.getAssignedUserId() != null && target.getAssignedUserId().equals(loginUser.getUserId());
+
+        if (!isAuthor && !isAdmin && !isAssignee) {
             return ResponseEntity.status(403).body(ApiResponse.error("수정 권한이 없습니다."));
         }
 

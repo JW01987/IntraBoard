@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_flutter/lucide_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_html/flutter_html.dart';
 import '../config/api_config.dart';
 import '../providers/user_provider.dart';
 import '../models/post_model.dart';
@@ -94,9 +95,9 @@ class _PostListScreenState extends State<PostListScreen> {
       if (response.statusCode == 200) {
         final responseBody = jsonDecode(response.body);
         final data = responseBody['data'];
-        
-        if (data != null && data['posts'] != null) {
-          final List list = data['posts'];
+
+        if (data != null && data['list'] != null) {
+          final List list = data['list'];
           setState(() {
             _posts = list.map((e) => PostModel.fromJson(e)).toList();
             _currentPage = data['currentPage'] ?? 1;
@@ -134,15 +135,23 @@ class _PostListScreenState extends State<PostListScreen> {
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : context.isMobile
-                    ? _buildCardList()
-                    : _buildTableView(),
+                : (widget.boardType == 'FAQ')
+                    ? _buildFaqList()
+                    : context.isMobile
+                        ? _buildCardList()
+                        : _buildTableView(),
           ),
           _buildPagination(),
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push('/write/${widget.boardType}'),
+        onPressed: () async {
+          final result = await context.push('/write/${widget.boardType}');
+          if (result == true) {
+            _searchController.clear();
+            _fetchPosts(page: 1); // 새 글이 작성되었으므로 첫 페이지로 갱신
+          }
+        },
         child: const Icon(LucideIcons.penLine),
       ),
     );
@@ -241,6 +250,98 @@ class _PostListScreenState extends State<PostListScreen> {
                 ? _buildPriorityBadge(post.priority)
                 : null,
             onTap: () => context.push('/post/${post.postId}'),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildFaqList() {
+    if (_posts.isEmpty) return const Center(child: Text('등록된 FAQ가 없습니다.'));
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      itemCount: _posts.length,
+      itemBuilder: (context, index) {
+        final post = _posts[index];
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: ExpansionTile(
+            shape: const RoundedRectangleBorder(side: BorderSide.none),
+            collapsedShape: const RoundedRectangleBorder(side: BorderSide.none),
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).primaryColor.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Text('Q',
+                  style: TextStyle(
+                      color: Theme.of(context).primaryColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16)),
+            ),
+            title: Text(
+              post.title,
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+            ),
+            children: [
+              const Divider(height: 1),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(12),
+                      bottomRight: Radius.circular(12)),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      margin: const EdgeInsets.only(top: 4, right: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Text('A',
+                          style: TextStyle(
+                              color: Colors.orange,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16)),
+                    ),
+                    Expanded(
+                      child: Html(
+                        data: post.content ?? '내용이 없습니다.',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (post.authorName != null)
+                Padding(
+                  padding: const EdgeInsets.only(right: 20, bottom: 12),
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      '최종 업데이트: ${post.authorName} • ${DateFormat('yyyy-MM-dd').format(post.createdAt ?? DateTime.now())}',
+                      style: const TextStyle(fontSize: 11, color: Colors.grey),
+                    ),
+                  ),
+                ),
+            ],
           ),
         );
       },

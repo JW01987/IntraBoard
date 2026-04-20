@@ -34,7 +34,11 @@ public class PostService {
     // 2. 게시글 상세 보기 (조회수 1 증가시키고 조회)
     public Post getPostDetail(Long postId) {
         postMapper.increaseViewCount(postId);
-        return postMapper.findById(postId);
+        Post post = postMapper.findById(postId);
+        if (post != null) {
+            post.setFiles(postFileMapper.findByPostId(postId));
+        }
+        return post;
     }
 
     // 2-1. 내부 검증 및 수정용 조회 (조회수 증가 방지)

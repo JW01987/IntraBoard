@@ -26,6 +26,7 @@ public class WebConfig implements WebMvcConfigurer {
                         "/api/users/login",
                         "/api/users/register", // 회원가입, 로그인은 인증 없이 뚫려있어야 함
                         "/api/system/companies", // 회원가입 시 회사 목록 조회가 필요함
+                        "/api/files/display/**", // 이미지 인라인 미리보기는 공개 (UUID 파일명으로 보안 유지)
                         "/error"
                 );
     }

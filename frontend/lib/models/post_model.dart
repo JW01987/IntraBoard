@@ -10,8 +10,11 @@ class PostModel {
   final String? authorName;
   final String? authorCompany;
   final String? categoryName;
+  final int? categoryId;
   final int? statusId;
   final int? priority;
+  final int? assignedUserId;
+  final String? assignedUserName;
   final DateTime? createdAt;
   final List<PostFileModel> files;
 
@@ -25,8 +28,11 @@ class PostModel {
     this.authorName,
     this.authorCompany,
     this.categoryName,
+    this.categoryId,
     this.statusId,
     this.priority,
+    this.assignedUserId,
+    this.assignedUserName,
     this.createdAt,
     this.files = const [],
   });
@@ -42,8 +48,11 @@ class PostModel {
       authorName: json['authorName'],
       authorCompany: json['authorCompany'],
       categoryName: json['categoryName'],
+      categoryId: json['categoryId'],
       statusId: json['statusId'],
       priority: json['priority'],
+      assignedUserId: json['assignedUserId'],
+      assignedUserName: json['assignedUserName'],
       createdAt:
           json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
       files: json['files'] != null

@@ -20,6 +20,8 @@ dependencies:
   flutter_html: ^3.0.0-beta.2
   flutter_quill: ^9.3.0
   vsc_quill_delta_to_html: any
+  file_picker: ^8.1.4
+  url_launcher: ^6.3.1
 
 dev_dependencies:
   flutter_test:

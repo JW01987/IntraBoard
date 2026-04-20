@@ -43,4 +43,18 @@ public class FileService {
 
         return savedFilename;
     }
+
+    public org.springframework.core.io.Resource loadFileAsResource(String fileName) {
+        try {
+            java.nio.file.Path filePath = java.nio.file.Paths.get(UPLOAD_DIR).resolve(fileName).normalize();
+            org.springframework.core.io.Resource resource = new org.springframework.core.io.UrlResource(filePath.toUri());
+            if (resource.exists()) {
+                return resource;
+            } else {
+                return null;
+            }
+        } catch (java.net.MalformedURLException ex) {
+            return null;
+        }
+    }
 }
