@@ -32,6 +32,14 @@ public class UserController {
         // 아이디와 비밀번호만 꺼내서 서비스 로직으로 검사
         User user = userService.login(loginUser.getLoginId(), loginUser.getPassword());
         if (user != null) {
+            // 가입 승인 상태 체크
+            Integer status = user.getStatus();
+            if (status == null || status == 0) {
+                return ResponseEntity.status(401).body(ApiResponse.error("가입 승인 대기 중입니다. 관리자에게 문의하세요."));
+            } else if (status == 2) {
+                return ResponseEntity.status(401).body(ApiResponse.error("가입이 거절되었습니다. 관리자에게 문의하세요."));
+            }
+
             user.setPassword(null);
 
             // 세션 생성

@@ -13,6 +13,7 @@ public class User {
     private String name;
     private Long companyId; // 관계형 조인 (외래키)
     private Integer role; // 1: 슈퍼관리자(어드민), 2: 일반회원
+    private Integer status; // 0:승인대기, 1:활성, 2:거절
 
     // JOIN 전용 데이터
     private String companyName; // JOIN 시 가져올 회사명

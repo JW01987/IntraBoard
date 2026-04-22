@@ -277,8 +277,10 @@ class _WriteScreenState extends State<WriteScreen> {
           onPressed: () => context.pop(),
         ),
       ),
-      body: Center(
+      body: Align(
+        alignment: Alignment.topCenter,
         child: Container(
+          width: double.infinity, // 가로를 가득 채우되 MaxWidth로 제한
           constraints:
               context.isMobile ? null : const BoxConstraints(maxWidth: 900),
           child: Column(
@@ -393,6 +395,7 @@ class _WriteScreenState extends State<WriteScreen> {
                         child: quill.QuillEditor.basic(
                           configurations: quill.QuillEditorConfigurations(
                             controller: _quillController,
+                            scrollable: false, // 자체 스크롤을 끄고 부모의 SingleChildScrollView를 따르게 함
                             sharedConfigurations:
                                 const quill.QuillSharedConfigurations(
                               locale: Locale('ko', 'KR'),
@@ -409,6 +412,9 @@ class _WriteScreenState extends State<WriteScreen> {
                             onPressed: _isUploadingFiles ? null : _pickFiles,
                             icon: const Icon(LucideIcons.paperclip, size: 18),
                             label: const Text('파일 첨부'),
+                            style: FilledButton.styleFrom(
+                              minimumSize: const Size(120, 48), // 전역 테마의 infinity width 덮어쓰기
+                            ),
                           ),
                           const SizedBox(width: 12),
                           Text('최대 50MB, 다중 선택 가능', style: TextStyle(color: Colors.grey[600], fontSize: 12)),

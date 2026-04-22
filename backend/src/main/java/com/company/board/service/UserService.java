@@ -57,4 +57,14 @@ public class UserService {
     public java.util.List<User> getStaffList() {
         return userMapper.findStaffUsers();
     }
+
+    // 6. 승인 대기 목록 조회
+    public java.util.List<User> getPendingUsers() {
+        return userMapper.findPendingUsers();
+    }
+
+    // 7. 회원 승인 상태 업데이트
+    public void updateUserStatus(Long userId, Integer status) {
+        userMapper.updateStatus(userId, status);
+    }
 }

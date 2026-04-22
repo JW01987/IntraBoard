@@ -12,6 +12,7 @@ import 'screens/home_screen.dart';
 import 'screens/post_list_screen.dart';
 import 'screens/post_detail_screen.dart';
 import 'screens/write_screen.dart';
+import 'screens/company_management_screen.dart';
 
 void main() {
   runApp(
@@ -79,6 +80,10 @@ class _MyAppState extends State<MyApp> {
                 path: '/faq',
                 builder: (context, state) =>
                     const PostListScreen(title: 'FAQ', boardType: 'FAQ')),
+            GoRoute(
+                path: '/companies',
+                builder: (context, state) =>
+                    const CompanyManagementScreen()),
             GoRoute(
                 path: '/post/:id',
                 builder: (context, state) =>

@@ -23,4 +23,10 @@ public interface UserMapper {
 
     // 6. 담당자 후보 목록 조회 (본사 소속)
     List<User> findStaffUsers();
+
+    // 7. 조회: 가입 승인 대기 목록 (status=0)
+    List<User> findPendingUsers();
+
+    // 8. 대상 유저 상태 업데이트 (승인/거절)
+    void updateStatus(@org.apache.ibatis.annotations.Param("userId") Long userId, @org.apache.ibatis.annotations.Param("status") Integer status);
 }

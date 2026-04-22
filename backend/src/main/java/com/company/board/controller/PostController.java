@@ -40,25 +40,30 @@ public class PostController {
     // 3. 게시글 작성
     @PostMapping
     public ResponseEntity<ApiResponse<Void>> createPost(@RequestBody Post post, HttpServletRequest request) {
-        // 내 정보 꺼내기 (인터셉터를 통과했으므로 무조건 세션과 회원정보가 존재함)
-        User loginUser = (User) request.getSession(false).getAttribute("LOGIN_USER");
-        
-        // 프론트엔드가 혹시 userId를 조작해서 보낼 수도 있으니, 무시하고 서버 세션에 있는 내 ID로 강제로 덮어씌웁니다. (보안)
-        post.setUserId(loginUser.getUserId()); 
+        try {
+            // 내 정보 꺼내기 (인터셉터를 통과했으므로 무조건 세션과 회원정보가 존재함)
+            User loginUser = (User) request.getSession(false).getAttribute("LOGIN_USER");
+            
+            // 프론트엔드가 혹시 userId를 조작해서 보낼 수도 있으니, 무시하고 서버 세션에 있는 내 ID로 강제로 덮어씌웁니다. (보안)
+            post.setUserId(loginUser.getUserId()); 
 
-        // 만약 상태/카테고리/중요도 값이 안 들어왔으면 기본값으로 매핑
-        if (post.getStatusId() == null) {
-            post.setStatusId(PostStatus.IN_PROGRESS.getCode());
-        }
-        if (post.getCategoryId() == null) {
-            post.setCategoryId(4L); // 기타
-        }
-        if (post.getPriority() == null) {
-            post.setPriority(Priority.NORMAL.getCode());
-        }
+            // 만약 상태/카테고리/중요도 값이 안 들어왔으면 기본값으로 매핑
+            if (post.getStatusId() == null) {
+                post.setStatusId(PostStatus.IN_PROGRESS.getCode());
+            }
+            if (post.getCategoryId() == null) {
+                post.setCategoryId(4L); // 기타
+            }
+            if (post.getPriority() == null) {
+                post.setPriority(Priority.NORMAL.getCode());
+            }
 
-        postService.createPost(post);
-        return ResponseEntity.ok(ApiResponse.success("글이 성공적으로 등록되었습니다."));
+            postService.createPost(post);
+            return ResponseEntity.ok(ApiResponse.success("글이 성공적으로 등록되었습니다."));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(ApiResponse.error("글 작성 오류: " + e.getMessage()));
+        }
     }
 
     // 4. 게시글 수정

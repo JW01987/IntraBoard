@@ -61,8 +61,8 @@ class _WebLayout extends StatelessWidget {
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold)),
                         ),
-                        _menuItem(context, '고객사 관리', Icons.business_outlined,
-                            '/admin/company'),
+                        _menuItem(context, '고객사 관리', LucideIcons.building2,
+                            '/companies'),
                         _menuItem(context, '시스템 설정', Icons.settings_outlined,
                             '/admin/settings'),
                       ],
@@ -127,11 +127,12 @@ class _MobileLayout extends StatelessWidget {
                 leading: const Icon(LucideIcons.helpCircle),
                 title: const Text('FAQ'),
                 onTap: () => context.go('/faq')),
-            if (isAdmin)
+            if (isAdmin) ...[
               ListTile(
-                  leading: const Icon(LucideIcons.settings),
-                  title: const Text('관리자 메뉴'),
-                  onTap: () {}),
+                  leading: const Icon(LucideIcons.building2),
+                  title: const Text('고객사 관리'),
+                  onTap: () => context.go('/companies')),
+            ],
             const Spacer(),
             _logoutButton(context),
           ],
