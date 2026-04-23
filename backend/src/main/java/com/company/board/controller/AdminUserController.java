@@ -36,6 +36,15 @@ public class AdminUserController {
         return ResponseEntity.ok(ApiResponse.success("승인 대기 목록 조회 성공", userService.getPendingUsers()));
     }
 
+    // 1.5 전체 회원 목록 조회
+    @GetMapping("/all")
+    public ResponseEntity<ApiResponse<List<User>>> getAllUsers(HttpServletRequest request) {
+        if (!isAdmin(request)) {
+            return ResponseEntity.status(403).body(ApiResponse.error("권한이 없습니다. (관리자 전용)"));
+        }
+        return ResponseEntity.ok(ApiResponse.success("전체 회원 목록 조회 성공", userService.getAllUsers()));
+    }
+
     // 2. 가입 승인
     @PutMapping("/{id}/approve")
     public ResponseEntity<ApiResponse<Void>> approveUser(@PathVariable("id") Long id, HttpServletRequest request) {

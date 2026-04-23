@@ -63,7 +63,12 @@ public class UserService {
         return userMapper.findPendingUsers();
     }
 
-    // 7. 회원 승인 상태 업데이트
+    // 7. 전체 목록 조회
+    public java.util.List<User> getAllUsers() {
+        return userMapper.findAll();
+    }
+
+    // 8. 회원 승인 상태 업데이트
     public void updateUserStatus(Long userId, Integer status) {
         userMapper.updateStatus(userId, status);
     }

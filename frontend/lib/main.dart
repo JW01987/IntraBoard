@@ -13,6 +13,7 @@ import 'screens/post_list_screen.dart';
 import 'screens/post_detail_screen.dart';
 import 'screens/write_screen.dart';
 import 'screens/company_management_screen.dart';
+import 'screens/user_management_screen.dart';
 
 void main() {
   runApp(
@@ -84,6 +85,10 @@ class _MyAppState extends State<MyApp> {
                 path: '/companies',
                 builder: (context, state) =>
                     const CompanyManagementScreen()),
+            GoRoute(
+                path: '/admin/users',
+                builder: (context, state) =>
+                    const UserManagementScreen()),
             GoRoute(
                 path: '/post/:id',
                 builder: (context, state) =>
@@ -235,10 +240,22 @@ class _LoginScreenState extends State<LoginScreen> {
                 return;
               }
 
-              final success = await context.read<UserProvider>().login(id, pw);
-              if (!success && context.mounted) {
+              final result = await context.read<UserProvider>().login(id, pw);
+              if (result['success'] != true && context.mounted) {
+                final message = result['message'] as String;
+                Color bgColor = Colors.red; // 기본 에러 색상
+                if (message.contains('승인 대기')) {
+                  bgColor = Colors.orange;
+                } else if (message.contains('가입이 거절')) {
+                  bgColor = Colors.red;
+                }
+
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('로그인 실패: 정보를 확인하세요.')),
+                  SnackBar(
+                    content: Text(message),
+                    backgroundColor: bgColor,
+                    behavior: SnackBarBehavior.floating, // 좀 더 예쁘게
+                  ),
                 );
               }
             },

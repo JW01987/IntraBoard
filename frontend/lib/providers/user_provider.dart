@@ -13,7 +13,7 @@ class UserProvider with ChangeNotifier {
   String? get sessionCookie => _sessionCookie;
 
   // 1. 로그인 메서드
-  Future<bool> login(String loginId, String password) async {
+  Future<Map<String, dynamic>> login(String loginId, String password) async {
     try {
       final response = await http.post(
         Uri.parse(ApiConfig.loginUrl),
@@ -24,26 +24,24 @@ class UserProvider with ChangeNotifier {
         }),
       );
 
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> result = jsonDecode(response.body);
+      final Map<String, dynamic> result = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && result['success'] == true) {
+        _user = UserModel.fromJson(result['data']);
         
-        if (result['success'] == true) {
-          _user = UserModel.fromJson(result['data']);
-          
-          // 세션 쿠키 추출 및 저장 (JSESSIONID 등)
-          final String? rawCookie = response.headers['set-cookie'];
-          if (rawCookie != null) {
-            _sessionCookie = _extractSessionId(rawCookie);
-          }
-          
-          notifyListeners();
-          return true;
+        // 세션 쿠키 추출 및 저장 (JSESSIONID 등)
+        final String? rawCookie = response.headers['set-cookie'];
+        if (rawCookie != null) {
+          _sessionCookie = _extractSessionId(rawCookie);
         }
+        
+        notifyListeners();
+        return {'success': true};
       }
-      return false;
+      return {'success': false, 'message': result['message'] ?? '로그인에 실패했습니다.'};
     } catch (e) {
       debugPrint('Login Error: $e');
-      return false;
+      return {'success': false, 'message': '서버에 연결할 수 없습니다.'};
     }
   }
 
