@@ -38,14 +38,17 @@ class _HomeScreenState extends State<HomeScreen> {
       final statsRes = await http.get(
           Uri.parse('${ApiConfig.baseUrl}/api/admin/dashboard'),
           headers: headers);
+      if (!mounted) return;
       // 2. 최근 공지사항 호출
       final noticeRes = await http.get(
           Uri.parse('${ApiConfig.baseUrl}/api/posts?boardType=NOTICE&size=5'),
           headers: headers);
+      if (!mounted) return;
       // 3. 최근 이슈 호출
       final issueRes = await http.get(
           Uri.parse('${ApiConfig.baseUrl}/api/posts?boardType=ISSUE&size=5'),
           headers: headers);
+      if (!mounted) return;
 
       if (mounted) {
         setState(() {

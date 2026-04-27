@@ -64,4 +64,25 @@ public class AdminUserController {
         userService.updateUserStatus(id, 2); // 2: 거절
         return ResponseEntity.ok(ApiResponse.success("가입이 거절되었습니다."));
     }
+
+    // 4. 회원 정보 수정 (소속 회사, 상태 등)
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> updateUser(@PathVariable("id") Long id, @RequestBody User user, HttpServletRequest request) {
+        if (!isAdmin(request)) {
+            return ResponseEntity.status(403).body(ApiResponse.error("권한이 없습니다. (관리자 전용)"));
+        }
+        user.setUserId(id);
+        userService.updateUser(user);
+        return ResponseEntity.ok(ApiResponse.success("회원 정보가 수정되었습니다."));
+    }
+
+    // 5. 회원 삭제
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable("id") Long id, HttpServletRequest request) {
+        if (!isAdmin(request)) {
+            return ResponseEntity.status(403).body(ApiResponse.error("권한이 없습니다. (관리자 전용)"));
+        }
+        userService.deleteUser(id);
+        return ResponseEntity.ok(ApiResponse.success("회원이 삭제되었습니다."));
+    }
 }

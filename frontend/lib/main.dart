@@ -262,7 +262,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
               // autoLogin 값을 같이 넘겨준다
               final result = await context.read<UserProvider>().login(id, pw, saveCredentials: _autoLogin);
-              if (result['success'] != true && context.mounted) {
+              if (!mounted) return;
+              if (result['success'] != true) {
                 final message = result['message'] as String;
                 Color bgColor = Colors.red; // 기본 에러 색상
                 if (message.contains('승인 대기')) {

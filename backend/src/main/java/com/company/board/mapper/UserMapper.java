@@ -29,4 +29,10 @@ public interface UserMapper {
 
     // 8. 대상 유저 상태 업데이트 (승인/거절)
     void updateStatus(@org.apache.ibatis.annotations.Param("userId") Long userId, @org.apache.ibatis.annotations.Param("status") Integer status);
+
+    // 9. 회원 정보 수정 (회사, 상태 등)
+    void update(User user);
+
+    // 10. 회원 삭제
+    void deleteById(Long userId);
 }

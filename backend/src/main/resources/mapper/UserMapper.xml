@@ -76,4 +76,20 @@
         WHERE user_id = #{userId}
     </update>
 
+    <!-- 9. 유저 정보 수정 (회사, 상태 등) -->
+    <update id="update">
+        UPDATE user
+        <set>
+            <if test="companyId != null">company_id = #{companyId},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="role != null">role = #{role},</if>
+        </set>
+        WHERE user_id = #{userId}
+    </update>
+
+    <!-- 10. 유저 삭제 -->
+    <delete id="deleteById">
+        DELETE FROM user WHERE user_id = #{userId}
+    </delete>
+
 </mapper>

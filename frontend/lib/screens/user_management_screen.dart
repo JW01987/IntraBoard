@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import '../config/api_config.dart';
 import '../providers/user_provider.dart';
 import '../models/user_model.dart';
+import '../models/company_model.dart';
 import '../utils/responsive.dart';
 
 class UserManagementScreen extends StatefulWidget {
@@ -20,6 +21,10 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
   bool _isLoading = true;
   List<UserModel> _pendingUsers = [];
   List<UserModel> _allUsers = [];
+  List<CompanyModel> _companies = [];
+  
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -28,12 +33,38 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
   }
 
   Future<void> _fetchData() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
-    await Future.wait([
-      _fetchPending(),
-      _fetchAll(),
-    ]);
-    if (mounted) setState(() => _isLoading = false);
+    
+    try {
+      await Future.wait([
+        _fetchPending(),
+        _fetchAll(),
+        _fetchCompanies(),
+      ]);
+    } catch (e) {
+      debugPrint('Fetch Data Global Error: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _fetchCompanies() async {
+    try {
+      final res = await http.get(Uri.parse('${ApiConfig.baseUrl}/api/system/companies'));
+      if (!mounted) return;
+      if (res.statusCode == 200) {
+        final result = jsonDecode(res.body);
+        if (result != null && result['data'] != null) {
+          final List data = result['data'];
+          _companies = data.map((e) => CompanyModel.fromJson(e)).toList();
+        }
+      }
+    } catch (e) {
+      debugPrint('Fetch companies error: $e');
+    }
   }
 
   Future<void> _fetchPending() async {
@@ -43,9 +74,15 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
         Uri.parse('${ApiConfig.baseUrl}/api/admin/users/pending'),
         headers: ApiConfig.getHeaders(session),
       );
+      if (!mounted) return;
       if (res.statusCode == 200) {
-        final data = jsonDecode(res.body)['data'] as List;
-        _pendingUsers = data.map((e) => UserModel.fromJson(e)).toList();
+        final result = jsonDecode(res.body);
+        if (result != null && result['data'] != null) {
+          final List data = result['data'];
+          _pendingUsers = data.map((e) => UserModel.fromJson(e)).toList();
+        } else {
+          _pendingUsers = [];
+        }
       }
     } catch (e) {
       debugPrint('Fetch pending error: $e');
@@ -59,9 +96,15 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
         Uri.parse('${ApiConfig.baseUrl}/api/admin/users/all'),
         headers: ApiConfig.getHeaders(session),
       );
+      if (!mounted) return;
       if (res.statusCode == 200) {
-        final data = jsonDecode(res.body)['data'] as List;
-        _allUsers = data.map((e) => UserModel.fromJson(e)).toList();
+        final result = jsonDecode(res.body);
+        if (result != null && result['data'] != null) {
+          final List data = result['data'];
+          _allUsers = data.map((e) => UserModel.fromJson(e)).toList();
+        } else {
+          _allUsers = [];
+        }
       }
     } catch (e) {
       debugPrint('Fetch all error: $e');
@@ -75,11 +118,62 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
         Uri.parse('${ApiConfig.baseUrl}/api/admin/users/${user.userId}/approve'),
         headers: ApiConfig.getHeaders(session),
       );
+      if (!mounted) return;
       if (res.statusCode == 200) {
         _fetchData();
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('승인되었습니다.'), backgroundColor: Colors.green));
-        }
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('승인되었습니다.'), backgroundColor: Colors.green));
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('오류: $e')));
+    }
+  }
+
+  Future<void> _updateUser(dynamic userId, Map<String, dynamic> data) async {
+    final session = context.read<UserProvider>().sessionCookie;
+    try {
+      final res = await http.put(
+        Uri.parse('${ApiConfig.baseUrl}/api/admin/users/$userId'),
+        headers: ApiConfig.getHeaders(session),
+        body: jsonEncode(data),
+      );
+      if (!mounted) return;
+      if (res.statusCode == 200) {
+        _fetchData();
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('수정되었습니다.')));
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('오류: $e')));
+    }
+  }
+
+  Future<void> _deleteUser(UserModel user) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('계정 삭제'),
+        content: Text('${user.name} 님의 계정을 완전히 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('취소')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('삭제', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    if (!mounted || confirm != true) return;
+    
+    final session = context.read<UserProvider>().sessionCookie;
+    try {
+      final res = await http.delete(
+        Uri.parse('${ApiConfig.baseUrl}/api/admin/users/${user.userId}'),
+        headers: ApiConfig.getHeaders(session),
+      );
+      if (!mounted) return;
+      if (res.statusCode == 200) {
+        _fetchData();
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('삭제되었습니다.')));
       }
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('오류: $e')));
@@ -102,23 +196,79 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
       ),
     );
 
-    if (confirm == true) {
-      final session = context.read<UserProvider>().sessionCookie;
-      try {
-        final res = await http.put(
-          Uri.parse('${ApiConfig.baseUrl}/api/admin/users/${user.userId}/reject'),
-          headers: ApiConfig.getHeaders(session),
-        );
-        if (res.statusCode == 200) {
-          _fetchData();
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('가입이 거절되었습니다.')));
-          }
-        }
-      } catch (e) {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('오류: $e')));
+    if (!mounted || confirm != true) return;
+
+    final session = context.read<UserProvider>().sessionCookie;
+    try {
+      final res = await http.put(
+        Uri.parse('${ApiConfig.baseUrl}/api/admin/users/${user.userId}/reject'),
+        headers: ApiConfig.getHeaders(session),
+      );
+      if (!mounted) return;
+      if (res.statusCode == 200) {
+        _fetchData();
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('가입이 거절되었습니다.')));
       }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('오류: $e')));
     }
+  }
+
+  void _showChangeCompanyDialog(UserModel user) {
+    if (_companies.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('회사 목록을 불러오는 중입니다. 잠시 후 다시 시도해주세요.')));
+      return;
+    }
+
+    CompanyModel? selectedCompany;
+    try {
+      selectedCompany = _companies.firstWhere(
+        (c) => c.companyId == user.companyId,
+        orElse: () => _companies.first,
+      );
+    } catch (e) {
+      selectedCompany = _companies.isNotEmpty ? _companies.first : null;
+    }
+
+    if (selectedCompany == null) return;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text('${user.name} 소속 변경'),
+          content: DropdownButton<CompanyModel>(
+            isExpanded: true,
+            value: selectedCompany,
+            items: _companies.map((c) => DropdownMenuItem(value: c, child: Text(c.companyName))).toList(),
+            onChanged: (val) => setDialogState(() => selectedCompany = val),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('취소')),
+            FilledButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                if (selectedCompany != null) {
+                  _updateUser(user.userId, {'companyId': selectedCompany!.companyId});
+                }
+              },
+              child: const Text('변경'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<UserModel> get _filteredUsers {
+    if (_searchQuery.isEmpty) return _allUsers;
+    return _allUsers.where((u) {
+      final query = _searchQuery.toLowerCase();
+      final nameMatch = u.name.toLowerCase().contains(query);
+      final idMatch = u.loginId?.toLowerCase().contains(query) ?? false;
+      final companyMatch = u.companyName?.toLowerCase().contains(query) ?? false;
+      return nameMatch || idMatch || companyMatch;
+    }).toList();
   }
 
   Widget _buildStatusBadge(int? status) {
@@ -143,7 +293,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
   Widget build(BuildContext context) {
     final user = context.watch<UserProvider>().user;
     if (user == null || user.role != 1) {
-      return const Scaffold(body: Center(child: Text('접근 권한이 없습니다. 관리자 전용 화면입니다.')));
+      return const Scaffold(body: Center(child: Text('접근 권한이 없습니다.')));
     }
 
     return DefaultTabController(
@@ -161,18 +311,22 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
         ),
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
-            : TabBarView(
-                children: [
-                  _buildPendingTab(),
-                  _buildAllUsersTab(),
-                ],
+            : Material(
+                child: TabBarView(
+                  children: [
+                    _buildPendingTab(),
+                    _buildAllUsersTab(),
+                  ],
+                ),
               ),
       ),
     );
   }
 
   Widget _buildPendingTab() {
-    if (_pendingUsers.isEmpty) return const Center(child: Text('대기 중인 회원이 없습니다.'));
+    if (_pendingUsers.isEmpty) {
+      return const Center(child: Text('대기 중인 회원이 없습니다.'));
+    }
     
     return ListView.separated(
       padding: const EdgeInsets.all(16),
@@ -228,67 +382,128 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
   }
 
   Widget _buildAllUsersTab() {
-    if (_allUsers.isEmpty) return const Center(child: Text('회원이 없습니다.'));
-
-    final isMobile = context.isMobile;
-
-    if (isMobile) {
-      return ListView.separated(
-        padding: const EdgeInsets.all(16),
-        itemCount: _allUsers.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 12),
-        itemBuilder: (context, index) {
-          final u = _allUsers[index];
-          return Card(
-            elevation: 0,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey[300]!)),
-            child: ListTile(
-              title: Text(u.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text('${u.companyName ?? ''} | ${u.loginId ?? ''}'),
-              trailing: _buildStatusBadge(u.status),
+    final filtered = _filteredUsers;
+    
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: TextField(
+            controller: _searchController,
+            decoration: InputDecoration(
+              hintText: '이름, 아이디, 회사명으로 검색',
+              prefixIcon: const Icon(LucideIcons.search, size: 20),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16),
             ),
-          );
-        },
-      );
+            onChanged: (val) => setState(() => _searchQuery = val),
+          ),
+        ),
+        Expanded(
+          child: context.isMobile 
+            ? _buildMobileList(filtered) 
+            : _buildDesktopTable(filtered),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileList(List<UserModel> users) {
+    if (users.isEmpty) {
+      return const Center(child: Text('회원이 없습니다.'));
+    }
+    
+    return ListView.separated(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      itemCount: users.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      itemBuilder: (context, index) {
+        final u = users[index];
+        return Card(
+          elevation: 0,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey[300]!)),
+          child: ListTile(
+            title: Text(u.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: Text('${u.companyName ?? ''} | ${u.loginId ?? ''}'),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildStatusBadge(u.status),
+                _buildUserActionMenu(u),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDesktopTable(List<UserModel> users) {
+    if (users.isEmpty) {
+      return const Center(child: Text('회원이 없습니다.'));
     }
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
-      child: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[200]!),
-        ),
-        child: DataTable(
-          headingRowColor: MaterialStateProperty.all(Colors.grey[50]),
-          columns: const [
-            DataColumn(label: Text('상태', style: TextStyle(fontWeight: FontWeight.bold))),
-            DataColumn(label: Text('이름', style: TextStyle(fontWeight: FontWeight.bold))),
-            DataColumn(label: Text('아이디', style: TextStyle(fontWeight: FontWeight.bold))),
-            DataColumn(label: Text('소속 회사', style: TextStyle(fontWeight: FontWeight.bold))),
-            DataColumn(label: Text('가입일', style: TextStyle(fontWeight: FontWeight.bold))),
-            DataColumn(label: Text('관리', style: TextStyle(fontWeight: FontWeight.bold))),
-          ],
-          rows: _allUsers.map((u) {
-            return DataRow(cells: [
-              DataCell(_buildStatusBadge(u.status)),
-              DataCell(Text(u.name, style: const TextStyle(fontWeight: FontWeight.bold))),
-              DataCell(Text(u.loginId ?? '-')),
-              DataCell(Text(u.companyName ?? '-')),
-              DataCell(Text(u.createdAt != null ? DateFormat('yyyy-MM-dd').format(u.createdAt!) : '-')),
-              DataCell(u.status == 0 ? Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextButton.icon(icon: const Icon(LucideIcons.check, size: 16), label: const Text('승인'), onPressed: () => _approveUser(u)),
-                  TextButton.icon(icon: const Icon(LucideIcons.x, size: 16, color: Colors.red), label: const Text('거절', style: TextStyle(color: Colors.red)), onPressed: () => _showRejectConfirmDialog(u)),
-                ],
-              ) : const SizedBox.shrink()),
-            ]);
-          }).toList(),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey[200]!),
+          ),
+          child: DataTable(
+            headingRowColor: MaterialStateProperty.all(Colors.grey[50]),
+            columns: const [
+              DataColumn(label: Text('상태', style: TextStyle(fontWeight: FontWeight.bold))),
+              DataColumn(label: Text('이름', style: TextStyle(fontWeight: FontWeight.bold))),
+              DataColumn(label: Text('아이디', style: TextStyle(fontWeight: FontWeight.bold))),
+              DataColumn(label: Text('소속 회사', style: TextStyle(fontWeight: FontWeight.bold))),
+              DataColumn(label: Text('가입일', style: TextStyle(fontWeight: FontWeight.bold))),
+              DataColumn(label: Text('관리', style: TextStyle(fontWeight: FontWeight.bold))),
+            ],
+            rows: users.map((u) {
+              return DataRow(cells: [
+                DataCell(_buildStatusBadge(u.status)),
+                DataCell(Text(u.name, style: const TextStyle(fontWeight: FontWeight.bold))),
+                DataCell(Text(u.loginId ?? '-')),
+                DataCell(Text(u.companyName ?? '-')),
+                DataCell(Text(u.createdAt != null ? DateFormat('yyyy-MM-dd').format(u.createdAt!) : '-')),
+                DataCell(Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildUserActionMenu(u),
+                  ],
+                )),
+              ]);
+            }).toList(),
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _buildUserActionMenu(UserModel u) {
+    return PopupMenuButton<String>(
+      icon: const Icon(LucideIcons.moreVertical, size: 20),
+      onSelected: (val) {
+        if (val == 'company') _showChangeCompanyDialog(u);
+        if (val == 'toggle') _updateUser(u.userId, {'status': u.status == 1 ? 2 : 1});
+        if (val == 'delete') _deleteUser(u);
+      },
+      itemBuilder: (context) => [
+        const PopupMenuItem(value: 'company', child: Text('소속 변경')),
+        PopupMenuItem(
+          value: 'toggle',
+          child: Text(u.status == 1 ? '계정 비활성화' : '계정 활성화'),
+        ),
+        const PopupMenuDivider(),
+        const PopupMenuItem(
+          value: 'delete',
+          child: Text('계정 삭제', style: TextStyle(color: Colors.red)),
+        ),
+      ],
     );
   }
 }

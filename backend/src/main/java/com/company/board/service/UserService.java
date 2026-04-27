@@ -72,4 +72,14 @@ public class UserService {
     public void updateUserStatus(Long userId, Integer status) {
         userMapper.updateStatus(userId, status);
     }
+
+    // 9. 회원 정보 수정 (관리자용)
+    public void updateUser(User user) {
+        userMapper.update(user);
+    }
+
+    // 10. 회원 삭제 (관리자용)
+    public void deleteUser(Long userId) {
+        userMapper.deleteById(userId);
+    }
 }

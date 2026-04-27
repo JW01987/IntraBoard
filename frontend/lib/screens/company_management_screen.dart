@@ -37,6 +37,7 @@ class _CompanyManagementScreenState extends State<CompanyManagementScreen> {
         Uri.parse('${ApiConfig.baseUrl}/api/system/companies'),
         headers: headers,
       );
+      if (!mounted) return;
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body)['data'] as List;
         setState(() {
@@ -132,6 +133,7 @@ class _CompanyManagementScreenState extends State<CompanyManagementScreen> {
                     );
                   }
 
+                  if (!mounted) return;
                   if (res.statusCode == 200) {
                     Navigator.pop(ctx, true);
                   } else {
@@ -198,6 +200,7 @@ class _CompanyManagementScreenState extends State<CompanyManagementScreen> {
             '${ApiConfig.baseUrl}/api/system/companies/${company.companyId}'),
         headers: headers,
       );
+      if (!mounted) return;
       if (res.statusCode == 200) {
         _fetchCompanies();
         if (mounted) {

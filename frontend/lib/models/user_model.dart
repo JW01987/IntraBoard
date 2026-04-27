@@ -1,9 +1,9 @@
 class UserModel {
-  final Long? userId;
+  final int? userId;
   final String? loginId;
   final String name;
   final int role;
-  final Long companyId;
+  final int? companyId;
   final String? companyName;
   final int? companyType; // 추가
   final DateTime? createdAt;
@@ -27,10 +27,11 @@ class UserModel {
       loginId: json['loginId'],
       name: json['name'] ?? '',
       role: json['role'] ?? 2,
-      companyId: json['companyId'],
+      companyId: json['companyId'] ?? 0,
       companyName: json['companyName'],
       companyType: json['companyType'], // 추가
-      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
+      createdAt:
+          json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
       status: json['status'] ?? 0,
     );
   }

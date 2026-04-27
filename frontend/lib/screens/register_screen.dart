@@ -34,6 +34,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<void> _fetchCompanies() async {
     try {
       final response = await http.get(Uri.parse(ApiConfig.companiesUrl));
+      if (!mounted) return;
       if (response.statusCode == 200) {
         final result = jsonDecode(response.body);
         if (result['success'] == true) {
@@ -88,6 +89,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           'companyId': _selectedCompanyId,
         }),
       );
+      if (!mounted) return;
 
       final result = jsonDecode(response.body);
       if (response.statusCode == 200 && result['success'] == true) {
@@ -214,11 +216,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
           decoration: const InputDecoration(),
         ),
         const SizedBox(height: 40),
-        FilledButton(
-          onPressed: _isLoading ? null : _handleRegister,
-          child: _isLoading
-              ? const CircularProgressIndicator(color: Colors.white)
-              : const Text('가입하기'),
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton(
+            onPressed: _isLoading ? null : _handleRegister,
+            child: _isLoading
+                ? const CircularProgressIndicator(color: Colors.white)
+                : const Text('가입하기'),
+          ),
         ),
         const SizedBox(height: 40),
       ],

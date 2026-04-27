@@ -40,6 +40,7 @@ class _WriteScreenState extends State<WriteScreen> {
         withData: true,
       );
       if (result != null) {
+        if (!mounted) return;
         setState(() {
           for (var file in result.files) {
             if (file.size > 50 * 1024 * 1024) {
@@ -76,7 +77,9 @@ class _WriteScreenState extends State<WriteScreen> {
         }
 
         final streamedResponse = await req.send();
+        if (!mounted) return [];
         final response = await http.Response.fromStream(streamedResponse);
+        if (!mounted) return [];
 
         if (response.statusCode == 200) {
           final body = jsonDecode(response.body);
@@ -127,6 +130,7 @@ class _WriteScreenState extends State<WriteScreen> {
         Uri.parse('${ApiConfig.baseUrl}/api/posts/${widget.postId}'),
         headers: ApiConfig.getHeaders(context.read<UserProvider>().sessionCookie),
       );
+      if (!mounted) return;
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body)['data'];
         setState(() {
@@ -163,6 +167,7 @@ class _WriteScreenState extends State<WriteScreen> {
       final catRes = await http.get(
           Uri.parse('${ApiConfig.baseUrl}/api/system/categories'),
           headers: headers);
+      if (!mounted) return;
       if (catRes.statusCode == 200) {
         final List list = jsonDecode(catRes.body)['data'];
         _categories = list.map((e) => e as Map<String, dynamic>).toList();
@@ -176,6 +181,7 @@ class _WriteScreenState extends State<WriteScreen> {
       final staffRes = await http.get(
           Uri.parse('${ApiConfig.baseUrl}/api/users/staff'),
           headers: headers);
+      if (!mounted) return;
       if (staffRes.statusCode == 200) {
         final List list = jsonDecode(staffRes.body)['data'];
         _staffList = list.map((e) => UserModel.fromJson(e)).toList();
@@ -218,6 +224,7 @@ class _WriteScreenState extends State<WriteScreen> {
       List<Map<String, dynamic>> uploadedFiles = [];
       if (_selectedFiles.isNotEmpty) {
         uploadedFiles = await _uploadFiles();
+        if (!mounted) return;
       }
 
       final payload = {
@@ -243,6 +250,8 @@ class _WriteScreenState extends State<WriteScreen> {
           : await http.post(Uri.parse(url),
               headers: ApiConfig.getHeaders(context.read<UserProvider>().sessionCookie),
               body: jsonEncode(payload));
+      
+      if (!mounted) return;
 
       if (res.statusCode == 200) {
         if (mounted) {

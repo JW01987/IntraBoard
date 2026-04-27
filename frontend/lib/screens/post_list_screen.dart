@@ -104,6 +104,7 @@ class _PostListScreenState extends State<PostListScreen> {
     try {
       final response = await http.get(uri,
           headers: ApiConfig.getHeaders(userProvider.sessionCookie));
+      if (!mounted) return;
       if (response.statusCode == 200) {
         final responseBody = jsonDecode(response.body);
         final data = responseBody['data'];
@@ -159,6 +160,7 @@ class _PostListScreenState extends State<PostListScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           final result = await context.push('/write/${widget.boardType}');
+          if (!mounted) return;
           if (result == true) {
             _searchController.clear();
             _fetchPosts(page: 1); // 새 글이 작성되었으므로 첫 페이지로 갱신
@@ -277,6 +279,7 @@ class _PostListScreenState extends State<PostListScreen> {
                 : null,
             onTap: () async {
               final result = await context.push('/post/${post.postId}');
+              if (!mounted) return;
               if (result == true) _fetchPosts(page: _currentPage);
             },
           ),
@@ -431,6 +434,7 @@ class _PostListScreenState extends State<PostListScreen> {
           child: InkWell(
             onTap: () async {
               final result = await context.push('/post/${post.postId}');
+              if (!mounted) return;
               if (result == true) _fetchPosts(page: _currentPage);
             },
             child: Row(

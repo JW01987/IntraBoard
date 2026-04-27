@@ -80,6 +80,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       final postRes = await http.get(
           Uri.parse('${ApiConfig.baseUrl}/api/posts/${widget.id}'),
           headers: headers);
+      if (!mounted) return;
       if (postRes.statusCode == 200) {
         final data = jsonDecode(postRes.body)['data'];
         if (data != null) {
@@ -91,6 +92,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       final commentRes = await http.get(
           Uri.parse('${ApiConfig.baseUrl}/api/comments/post/${widget.id}'),
           headers: headers);
+      if (!mounted) return;
       if (commentRes.statusCode == 200) {
         final List list = jsonDecode(commentRes.body)['data'];
         _comments = list.map((e) => CommentModel.fromJson(e)).toList();
@@ -119,7 +121,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           'content': _commentController.text.trim(),
         }),
       );
-
+      if (!mounted) return;
       if (res.statusCode == 200) {
         _commentController.clear();
         setState(() {
@@ -162,7 +164,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         Uri.parse('${ApiConfig.baseUrl}/api/posts/${widget.id}'),
         headers: ApiConfig.getHeaders(userProvider.sessionCookie),
       );
-      if (res.statusCode == 200 && mounted) {
+      if (!mounted) return;
+      if (res.statusCode == 200) {
         ScaffoldMessenger.of(context)
             .showSnackBar(const SnackBar(content: Text('게시글이 삭제되었습니다.')));
         context.pop(); // 목록으로 돌아가기
@@ -197,6 +200,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         Uri.parse('${ApiConfig.baseUrl}/api/comments/$commentId'),
         headers: ApiConfig.getHeaders(userProvider.sessionCookie),
       );
+      if (!mounted) return;
       if (res.statusCode == 200) {
         _fetchDetail();
       } else {
@@ -228,6 +232,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           Uri.parse('${ApiConfig.baseUrl}/api/posts/${widget.id}'),
           headers: ApiConfig.getHeaders(userProvider.sessionCookie),
           body: jsonEncode(payload));
+      if (!mounted) return;
       if (res.statusCode == 200) {
         if (mounted) {
           ScaffoldMessenger.of(context)
@@ -256,6 +261,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         Uri.parse('${ApiConfig.baseUrl}/api/users/staff'),
         headers: ApiConfig.getHeaders(session),
       );
+      if (!mounted) return;
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body)['data'] as List;
         staffList = data.map((e) => Map<String, dynamic>.from(e)).toList();
@@ -406,7 +412,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                         headers: ApiConfig.getHeaders(session),
                         body: jsonEncode({'assignedUserId': selectedUserId}),
                       );
-                      if (res.statusCode == 200 && mounted) {
+                      if (!mounted) return;
+                      if (res.statusCode == 200) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('담당자가 변경되었습니다.'), backgroundColor: Colors.green),
                         );
@@ -525,6 +532,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                 if (val == 'edit') {
                   final result = await context
                       .push('/edit/${post.boardType}/${post.postId}');
+                  if (!mounted) return;
                   if (result == true) {
                     _fetchDetail(); // 수정 성공 시 상세 내용 다시 불러오기
                   }
