@@ -14,11 +14,13 @@ import '../utils/responsive.dart';
 class PostListScreen extends StatefulWidget {
   final String title;
   final String boardType;
+  final bool assignedToMe;
 
   const PostListScreen({
     super.key,
     required this.title,
     required this.boardType,
+    this.assignedToMe = false,
   });
 
   @override
@@ -36,10 +38,12 @@ class _PostListScreenState extends State<PostListScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _dateFilter = 'ALL';
   int? _statusId;
+  late bool _assignedToMe;
 
   @override
   void initState() {
     super.initState();
+    _assignedToMe = widget.assignedToMe;
     _fetchPosts();
   }
 
@@ -84,6 +88,14 @@ class _PostListScreenState extends State<PostListScreen> {
 
     if (_statusId != null) {
       queryParams['statusId'] = _statusId!.toString();
+    }
+    
+    // 내 담당 이슈 필터
+    if (widget.boardType == 'ISSUE' && _assignedToMe) {
+      final user = userProvider.user;
+      if (user != null && user.userId != null) {
+        queryParams['assignedUserId'] = user.userId.toString();
+      }
     }
 
     final uri = Uri.parse('${ApiConfig.baseUrl}/api/posts')
@@ -205,6 +217,20 @@ class _PostListScreenState extends State<PostListScreen> {
               ],
               onChanged: (val) => setState(() => _statusId = val),
             ),
+          if (widget.boardType == 'ISSUE')
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Checkbox(
+                  value: _assignedToMe,
+                  onChanged: (val) {
+                    setState(() => _assignedToMe = val ?? false);
+                    _fetchPosts(page: 1);
+                  },
+                ),
+                const Text('내 담당만 보기'),
+              ],
+            ),
           ElevatedButton.icon(
             onPressed: () => _fetchPosts(page: 1),
             icon: const Icon(LucideIcons.filter, size: 16),
@@ -249,7 +275,10 @@ class _PostListScreenState extends State<PostListScreen> {
             trailing: widget.boardType == 'ISSUE'
                 ? _buildPriorityBadge(post.priority)
                 : null,
-            onTap: () => context.push('/post/${post.postId}'),
+            onTap: () async {
+              final result = await context.push('/post/${post.postId}');
+              if (result == true) _fetchPosts(page: _currentPage);
+            },
           ),
         );
       },
@@ -400,7 +429,10 @@ class _PostListScreenState extends State<PostListScreen> {
         Padding(
           padding: const EdgeInsets.all(12),
           child: InkWell(
-            onTap: () => context.push('/post/${post.postId}'),
+            onTap: () async {
+              final result = await context.push('/post/${post.postId}');
+              if (result == true) _fetchPosts(page: _currentPage);
+            },
             child: Row(
               children: [
                 if (widget.boardType == 'ISSUE')

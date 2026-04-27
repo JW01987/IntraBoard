@@ -100,4 +100,27 @@ public class PostController {
         postService.deletePost(postId);
         return ResponseEntity.ok(ApiResponse.success("게시글이 삭제되었습니다."));
     }
+
+    // 6. 담당자 지정 (본사 직원 전용)
+    @PatchMapping("/{postId}/assignee")
+    public ResponseEntity<ApiResponse<Void>> updateAssignee(
+            @PathVariable("postId") Long postId,
+            @RequestBody Map<String, Long> payload,
+            HttpServletRequest request) {
+        
+        User loginUser = (User) request.getSession(false).getAttribute("LOGIN_USER");
+        
+        // 권한 체크: 관리자(1) 이거나 본사 소속(1)인지 확인
+        boolean isAdmin = UserRole.isAdmin(loginUser.getRole());
+        boolean isCompanyStaff = loginUser.getCompanyType() != null && loginUser.getCompanyType() == 1;
+
+        if (!isAdmin && !isCompanyStaff) {
+            return ResponseEntity.status(403).body(ApiResponse.error("담당자 지정 권한이 없습니다. (본사 직원 전용)"));
+        }
+
+        Long assignedUserId = payload.get("assignedUserId");
+        postService.updateAssignee(postId, assignedUserId);
+        
+        return ResponseEntity.ok(ApiResponse.success("담당자가 성공적으로 변경되었습니다."));
+    }
 }

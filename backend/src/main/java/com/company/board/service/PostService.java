@@ -72,4 +72,9 @@ public class PostService {
     public void deletePost(Long postId) {
         postMapper.deleteById(postId);
     }
+
+    // 6. 담당자 지정
+    public void updateAssignee(Long postId, Long assignedUserId) {
+        postMapper.updateAssignee(postId, assignedUserId);
+    }
 }

@@ -5,6 +5,7 @@ class UserModel {
   final int role;
   final Long companyId;
   final String? companyName;
+  final int? companyType; // 추가
   final DateTime? createdAt;
   final int? status;
 
@@ -15,6 +16,7 @@ class UserModel {
     required this.role,
     required this.companyId,
     this.companyName,
+    this.companyType, // 추가
     this.createdAt,
     this.status,
   });
@@ -27,6 +29,7 @@ class UserModel {
       role: json['role'] ?? 2,
       companyId: json['companyId'],
       companyName: json['companyName'],
+      companyType: json['companyType'], // 추가
       createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
       status: json['status'] ?? 0,
     );

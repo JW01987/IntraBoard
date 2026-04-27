@@ -40,6 +40,7 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     final userProvider = context.read<UserProvider>();
+    userProvider.checkAutoLogin(); // 추가된 부분: 앱 진입시 자동로그인 검사 수행
 
     _router = GoRouter(
       initialLocation: '/login',
@@ -72,7 +73,11 @@ class _MyAppState extends State<MyApp> {
             GoRoute(
                 path: '/issue',
                 builder: (context, state) =>
-                    const PostListScreen(title: '이슈문의', boardType: 'ISSUE')),
+                    PostListScreen(
+                      title: '이슈문의',
+                      boardType: 'ISSUE',
+                      assignedToMe: state.uri.queryParameters['assignedToMe'] == 'true',
+                    )),
             GoRoute(
                 path: '/archive',
                 builder: (context, state) =>
@@ -134,9 +139,14 @@ class _LoginScreenState extends State<LoginScreen> {
   final _idController = TextEditingController();
   final _pwController = TextEditingController();
   bool _isObscure = true;
+  bool _autoLogin = false; // 추가된 부분
 
   @override
   Widget build(BuildContext context) {
+    if (!context.watch<UserProvider>().isInitialized) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     return Scaffold(
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -215,7 +225,17 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Switch(
+              value: _autoLogin,
+              onChanged: (val) => setState(() => _autoLogin = val),
+            ),
+            const Text('자동 로그인', style: TextStyle(fontWeight: FontWeight.w500)),
+          ],
+        ),
+        const SizedBox(height: 24),
         SizedBox(
           width: double.infinity,
           child: FilledButton(
@@ -240,7 +260,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 return;
               }
 
-              final result = await context.read<UserProvider>().login(id, pw);
+              // autoLogin 값을 같이 넘겨준다
+              final result = await context.read<UserProvider>().login(id, pw, saveCredentials: _autoLogin);
               if (result['success'] != true && context.mounted) {
                 final message = result['message'] as String;
                 Color bgColor = Colors.red; // 기본 에러 색상

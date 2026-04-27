@@ -229,9 +229,11 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           headers: ApiConfig.getHeaders(userProvider.sessionCookie),
           body: jsonEncode(payload));
       if (res.statusCode == 200) {
-        _fetchDetail();
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('상태가 변경되었습니다.')));
+        if (mounted) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(const SnackBar(content: Text('상태가 변경되었습니다.')));
+          context.pop(true); // 변경 성공 시 목록으로 나가기 (새로고침 유도)
+        }
       } else {
         ScaffoldMessenger.of(context)
             .showSnackBar(const SnackBar(content: Text('상태 변경에 실패했습니다.')));
@@ -241,6 +243,190 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       debugPrint('Update Status Error: $e');
       setState(() => _isLoading = false);
     }
+  }
+
+  Future<void> _showAssigneeDialog() async {
+    final userProvider = context.read<UserProvider>();
+    final session = userProvider.sessionCookie;
+
+    // 1. 본사 직원 목록 가져오기
+    List<Map<String, dynamic>> staffList = [];
+    try {
+      final res = await http.get(
+        Uri.parse('${ApiConfig.baseUrl}/api/users/staff'),
+        headers: ApiConfig.getHeaders(session),
+      );
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body)['data'] as List;
+        staffList = data.map((e) => Map<String, dynamic>.from(e)).toList();
+      }
+    } catch (e) {
+      debugPrint('Fetch Staff Error: $e');
+    }
+
+    if (staffList.isEmpty || !mounted) return;
+
+    // 2. 현재 담당자를 기본 선택값으로
+    dynamic selectedUserId = _post?.assignedUserId;
+    String selectedName = '';
+    // 현재 담당자가 목록에 있으면 이름 매핑
+    final current = staffList.where((s) => s['userId'] == selectedUserId).toList();
+    if (current.isNotEmpty) {
+      selectedName = current.first['name'] ?? '';
+    } else {
+      selectedUserId = null;
+    }
+
+    final searchController = TextEditingController(text: selectedName);
+    List<Map<String, dynamic>> filtered = List.from(staffList);
+
+    await showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) {
+            return AlertDialog(
+              title: const Text('담당자 지정'),
+              content: SizedBox(
+                width: 320,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 선택된 담당자 표시
+                    if (selectedUserId != null)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: Theme.of(ctx).colorScheme.primary.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Theme.of(ctx).colorScheme.primary.withOpacity(0.3)),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(LucideIcons.userCheck, size: 16, color: Theme.of(ctx).colorScheme.primary),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                '선택됨: $selectedName',
+                                style: TextStyle(color: Theme.of(ctx).colorScheme.primary, fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () => setDialogState(() {
+                                selectedUserId = null;
+                                selectedName = '';
+                                searchController.clear();
+                                filtered = List.from(staffList);
+                              }),
+                              child: Icon(LucideIcons.x, size: 16, color: Theme.of(ctx).colorScheme.primary),
+                            ),
+                          ],
+                        ),
+                      ),
+                    // 검색 입력창
+                    TextField(
+                      controller: searchController,
+                      autofocus: true,
+                      decoration: const InputDecoration(
+                        hintText: '이름으로 검색...',
+                        prefixIcon: Icon(LucideIcons.search, size: 18),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      ),
+                      onChanged: (val) {
+                        setDialogState(() {
+                          filtered = staffList
+                              .where((s) => (s['name'] ?? '').toString().contains(val))
+                              .toList();
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    // 필터링된 직원 목록
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxHeight: 220),
+                      child: filtered.isEmpty
+                          ? const Padding(
+                              padding: EdgeInsets.all(16),
+                              child: Center(child: Text('검색 결과가 없습니다.', style: TextStyle(color: Colors.grey))),
+                            )
+                          : ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: filtered.length,
+                              itemBuilder: (_, i) {
+                                final staff = filtered[i];
+                                final isSelected = staff['userId'] == selectedUserId;
+                                return ListTile(
+                                  dense: true,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  selected: isSelected,
+                                  selectedTileColor: Theme.of(ctx).colorScheme.primary.withOpacity(0.08),
+                                  leading: CircleAvatar(
+                                    radius: 16,
+                                    backgroundColor: Theme.of(ctx).colorScheme.primary.withOpacity(0.12),
+                                    child: Text(
+                                      (staff['name'] ?? '?').toString().substring(0, 1),
+                                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Theme.of(ctx).colorScheme.primary),
+                                    ),
+                                  ),
+                                  title: Text(
+                                    staff['name'] ?? '',
+                                    style: TextStyle(fontWeight: isSelected ? FontWeight.bold : FontWeight.normal),
+                                  ),
+                                  trailing: isSelected ? Icon(LucideIcons.check, size: 18, color: Theme.of(ctx).colorScheme.primary) : null,
+                                  onTap: () {
+                                    setDialogState(() {
+                                      selectedUserId = staff['userId'];
+                                      selectedName = staff['name'] ?? '';
+                                      searchController.text = '';
+                                      filtered = List.from(staffList);
+                                    });
+                                  },
+                                );
+                              },
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('취소'),
+                ),
+                FilledButton(
+                  style: FilledButton.styleFrom(minimumSize: const Size(64, 36)),
+                  onPressed: () async {
+                    Navigator.pop(ctx);
+                    if (selectedUserId == null) return;
+                    try {
+                      final res = await http.patch(
+                        Uri.parse('${ApiConfig.baseUrl}/api/posts/${widget.id}/assignee'),
+                        headers: ApiConfig.getHeaders(session),
+                        body: jsonEncode({'assignedUserId': selectedUserId}),
+                      );
+                      if (res.statusCode == 200 && mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('담당자가 변경되었습니다.'), backgroundColor: Colors.green),
+                        );
+                        context.pop(true); // 변경 성공 시 목록으로 나가기 (새로고침 유도)
+                      } else if (mounted) {
+                        final msg = jsonDecode(res.body)['message'] ?? '담당자 변경에 실패했습니다.';
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+                      }
+                    } catch (e) {
+                      debugPrint('Update Assignee Error: $e');
+                    }
+                  },
+                  child: const Text('확인'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   Widget _buildStatusDropdown(int? currentStatus) {
@@ -319,6 +505,18 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               icon: const Icon(LucideIcons.moreVertical),
               itemBuilder: (context) => [
                 const PopupMenuItem(value: 'edit', child: Text('수정')),
+                if (post.boardType == 'ISSUE' &&
+                    (currentUser?.role == 1 || currentUser?.companyType == 1))
+                  const PopupMenuItem(
+                    value: 'assignee',
+                    child: Row(
+                      children: [
+                        Icon(LucideIcons.userCheck, size: 16),
+                        SizedBox(width: 8),
+                        Text('담당자 지정'),
+                      ],
+                    ),
+                  ),
                 const PopupMenuItem(
                     value: 'delete',
                     child: Text('삭제', style: TextStyle(color: Colors.red))),
@@ -330,6 +528,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                   if (result == true) {
                     _fetchDetail(); // 수정 성공 시 상세 내용 다시 불러오기
                   }
+                } else if (val == 'assignee') {
+                  _showAssigneeDialog();
                 } else if (val == 'delete') {
                   _deletePost();
                 }

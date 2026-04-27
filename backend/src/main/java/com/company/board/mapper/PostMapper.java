@@ -27,4 +27,7 @@ public interface PostMapper {
 
     // 7. 조회수 1 증가
     void increaseViewCount(Long postId);
+
+    // 8. 담당자 변경
+    void updateAssignee(@org.apache.ibatis.annotations.Param("postId") Long postId, @org.apache.ibatis.annotations.Param("assignedUserId") Long assignedUserId);
 }

@@ -24,10 +24,10 @@ public class AdminController {
     @GetMapping("/dashboard")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getDashboardStats(HttpServletRequest request) {
         
-        // 권한 방어벽
+        // 모든 로그인 사용자가 조회 가능하도록 권한 체크 제거 (로그인 세션만 확인)
         User loginUser = (User) request.getSession(false).getAttribute("LOGIN_USER");
-        if (!UserRole.isAdmin(loginUser.getRole())) {
-            return ResponseEntity.status(403).body(ApiResponse.error("접근 권한이 없습니다. (슈퍼관리자 전용)"));
+        if (loginUser == null) {
+            return ResponseEntity.status(401).body(ApiResponse.error("로그인이 필요합니다."));
         }
 
         Map<String, Object> result = new HashMap<>();
@@ -38,6 +38,13 @@ public class AdminController {
         result.put("statusStats", adminMapper.getPostStatusStats());
         result.put("priorityStats", adminMapper.getPostPriorityStats());
         result.put("categoryStats", adminMapper.getPostCategoryStats());
+        
+        // 본사 직원(company_type=1)인 경우에만 담당 이슈 최신 5건 반환
+        if (loginUser.getCompanyType() != null && loginUser.getCompanyType() == 1) {
+            result.put("assignedIssues", adminMapper.getAssignedIssues(loginUser.getUserId()));
+        } else {
+            result.put("assignedIssues", new java.util.ArrayList<>());
+        }
         
         return ResponseEntity.ok(ApiResponse.success("대시보드 통계 조회 성공", result));
     }

@@ -103,15 +103,20 @@ class _WriteScreenState extends State<WriteScreen> {
   int? _selectedCategory;
   int? _selectedPriority = 2; // 기본값: 보통
   int? _selectedStaff;
+  int? _selectedStatus; // 수정 시 기존 statusId 유지
+  bool _editDataLoaded = false; // 수정 데이터가 먼저 로드됐는지 추적
 
   @override
   void initState() {
     super.initState();
-    if (widget.boardType == 'ISSUE') {
-      _fetchIssueDependencies();
-    }
     if (widget.postId != null) {
-      _fetchPostDetail();
+      // 수정 모드: 기존 데이터를 먼저 로드 후 의존성 데이터 로드
+      _fetchPostDetail().then((_) {
+        if (widget.boardType == 'ISSUE') _fetchIssueDependencies();
+      });
+    } else {
+      // 신규 작성: 의존성 데이터만 로드
+      if (widget.boardType == 'ISSUE') _fetchIssueDependencies();
     }
   }
 
@@ -129,14 +134,11 @@ class _WriteScreenState extends State<WriteScreen> {
           _selectedCategory = data['categoryId'];
           _selectedPriority = data['priority'] ?? 2;
           _selectedStaff = data['assignedUserId'];
+          _selectedStatus = data['statusId']; // 기존 상태값 저장
+          _editDataLoaded = true;
           
           // Quill 에디터 내용 주입 (HTML -> QuillDelta)
-          // 참고: 실제로는 delta format으로 주고받는 것이 가장 정확하지만, 
-          // 현재는 HTML string으로 저장되어 있으므로 임시로 plain text 처리하거나 
-          // 간단한 html 파싱이 필요함. 여기서는 동작 보장을 위해 content 그대로 주입 시도.
-          // (주의: quill 에디터에 html을 직접 넣으려면 별도 컨버터가 필요함)
           if (data['content'] != null) {
-             // HTML 태그 제거 전 주요 줄바꿈 태그를 개행 문자로 치환하여 가독성 보존
              final plainText = data['content']
                 .replaceAll(RegExp(r'</p>|<br\s*/?>'), '\n')
                 .replaceAll(RegExp(r'<[^>]*>|&nbsp;'), '');
@@ -164,8 +166,10 @@ class _WriteScreenState extends State<WriteScreen> {
       if (catRes.statusCode == 200) {
         final List list = jsonDecode(catRes.body)['data'];
         _categories = list.map((e) => e as Map<String, dynamic>).toList();
-        if (_categories.isNotEmpty)
+        // 수정 모드에서 기존 데이터가 이미 로드됐다면 카테고리를 첫 번째 값으로 덮어쓰지 않음
+        if (!_editDataLoaded && _categories.isNotEmpty) {
           _selectedCategory = _categories.first['categoryId'];
+        }
       }
 
       // 담당자 목록 (본사 직원)
@@ -223,6 +227,8 @@ class _WriteScreenState extends State<WriteScreen> {
         'categoryId': _selectedCategory,
         'priority': _selectedPriority,
         'assignedUserId': _selectedStaff,
+        // 수정 모드: 기존 statusId 유지, 신규 작성: null (백엔드 기본값 적용)
+        if (_selectedStatus != null) 'statusId': _selectedStatus,
         'files': uploadedFiles,
       };
 

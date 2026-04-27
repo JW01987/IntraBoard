@@ -20,4 +20,7 @@ public interface AdminMapper {
     
     // 카테고리별 통계
     List<Map<String, Object>> getPostCategoryStats();
+
+    // 할당된 최근 미완료 이슈 (본사 전용)
+    List<Map<String, Object>> getAssignedIssues(@org.apache.ibatis.annotations.Param("userId") Long userId);
 }

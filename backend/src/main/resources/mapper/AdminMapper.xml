@@ -48,4 +48,22 @@
         GROUP BY c.category_id, c.category_name
     </select>
 
+    <select id="getAssignedIssues" resultType="map">
+        SELECT 
+            p.post_id as postId,
+            p.title as title,
+            p.priority as priority,
+            s.status_name as statusName,
+            p.created_at as createdAt,
+            u.name as authorName
+        FROM post p
+        LEFT JOIN user u ON p.user_id = u.user_id
+        LEFT JOIN post_status s ON p.status_id = s.status_id
+        WHERE p.assigned_user_id = #{userId} 
+          AND p.status_id != 3
+          AND p.is_deleted = false
+        ORDER BY p.created_at DESC
+        LIMIT 5
+    </select>
+
 </mapper>

@@ -106,6 +106,23 @@ class _HomeScreenState extends State<HomeScreen> {
 
             const SizedBox(height: 48),
 
+            // 1.5. 내 담당 이슈 (본사 전용)
+            if (user?.companyType == 1) ...[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('내 담당 이슈', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  TextButton(
+                    onPressed: () => context.go('/issue?assignedToMe=true'),
+                    child: const Text('전체보기'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              if (_isLoading) _buildShimmerCard() else _buildAssignedIssues(),
+              const SizedBox(height: 32),
+            ],
+
             // 2. 프로젝트/게시글 목록 영역
             context.isMobile
                 ? Column(children: [
@@ -253,6 +270,61 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
       ],
+    );
+  }
+
+  Widget _buildAssignedIssues() {
+    final issues = _stats?['assignedIssues'] as List? ?? [];
+    if (issues.isEmpty) {
+      return const Card(
+        child: Padding(
+          padding: EdgeInsets.all(32.0),
+          child: Center(
+            child: Text('담당 이슈가 없습니다', style: TextStyle(color: Colors.grey)),
+          ),
+        ),
+      );
+    }
+
+    return Card(
+      child: ListView.separated(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: issues.length,
+        separatorBuilder: (context, index) => const Divider(height: 1, indent: 16, endIndent: 16),
+        itemBuilder: (context, index) {
+          final issue = issues[index];
+          final priority = issue['priority'] as int? ?? 1;
+          String pLabel = '낮음';
+          Color pColor = Colors.grey;
+          if (priority == 4) { pLabel = '긴급'; pColor = Colors.red; }
+          else if (priority == 3) { pLabel = '높음'; pColor = Colors.orange; }
+          else if (priority == 2) { pLabel = '보통'; pColor = Colors.blue; }
+          
+          return ListTile(
+            title: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(color: pColor.withOpacity(0.1), borderRadius: BorderRadius.circular(4), border: Border.all(color: pColor)),
+                  child: Text(pLabel, style: TextStyle(color: pColor, fontSize: 10, fontWeight: FontWeight.bold)),
+                ),
+                const SizedBox(width: 8),
+                Expanded(child: Text(issue['title']?.toString() ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600))),
+              ],
+            ),
+            subtitle: Padding(
+              padding: const EdgeInsets.only(top: 4.0),
+              child: Text(
+                '[${issue['statusName'] ?? '대기'}] ${issue['authorName'] ?? ''} • ${issue['createdAt']?.toString().substring(0, 10) ?? ''}',
+                style: const TextStyle(fontSize: 12),
+              ),
+            ),
+            trailing: const Icon(LucideIcons.chevronRight, size: 16, color: Colors.grey),
+            onTap: () => context.push('/post/${issue['postId']}'),
+          );
+        },
+      ),
     );
   }
 

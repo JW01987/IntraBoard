@@ -125,12 +125,22 @@
 
     <update id="update">
         UPDATE post
-        SET status_id = #{statusId},
-            category_id = #{categoryId},
-            priority = #{priority},
-            assigned_user_id = #{assignedUserId},
+        <set>
             title = #{title},
-            content = #{content}
+            content = #{content},
+            <if test="statusId != null">
+                status_id = #{statusId},
+            </if>
+            <if test="categoryId != null">
+                category_id = #{categoryId},
+            </if>
+            <if test="priority != null">
+                priority = #{priority},
+            </if>
+            <if test="assignedUserId != null">
+                assigned_user_id = #{assignedUserId},
+            </if>
+        </set>
         WHERE post_id = #{postId}
     </update>
 
@@ -144,6 +154,12 @@
     <update id="increaseViewCount">
         UPDATE post
         SET view_count = view_count + 1
+        WHERE post_id = #{postId}
+    </update>
+
+    <update id="updateAssignee">
+        UPDATE post 
+        SET assigned_user_id = #{assignedUserId} 
         WHERE post_id = #{postId}
     </update>
 
