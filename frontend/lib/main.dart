@@ -228,9 +228,9 @@ class _LoginScreenState extends State<LoginScreen> {
         const SizedBox(height: 16),
         Row(
           children: [
-            Switch(
+            Checkbox(
               value: _autoLogin,
-              onChanged: (val) => setState(() => _autoLogin = val),
+              onChanged: (val) => setState(() => _autoLogin = val ?? false),
             ),
             const Text('자동 로그인', style: TextStyle(fontWeight: FontWeight.w500)),
           ],
