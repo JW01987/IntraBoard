@@ -403,8 +403,8 @@ class _WriteScreenState extends State<WriteScreen> {
                       Container(
                         constraints: const BoxConstraints(minHeight: 400),
                         decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey[300]!),
-                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                         padding: const EdgeInsets.all(16),
                         child: quill.QuillEditor.basic(
@@ -445,9 +445,9 @@ class _WriteScreenState extends State<WriteScreen> {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.grey[50],
-                            border: Border.all(color: Colors.grey[200]!),
-                            borderRadius: BorderRadius.circular(8),
+                            color: const Color(0xFFF8FAFC),
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                            borderRadius: BorderRadius.circular(12),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -543,8 +543,8 @@ class _WriteScreenState extends State<WriteScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey[300]!),
-            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+            borderRadius: BorderRadius.circular(12),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<T>(

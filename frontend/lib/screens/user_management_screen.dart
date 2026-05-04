@@ -338,7 +338,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: Colors.grey[300]!),
+            side: const BorderSide(color: Color(0xFFE2E8F0)),
           ),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
@@ -421,7 +421,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
         final u = users[index];
         return Card(
           elevation: 0,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey[300]!)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: const BorderSide(color: Color(0xFFE2E8F0))),
           child: ListTile(
             title: Text(u.name, style: const TextStyle(fontWeight: FontWeight.bold)),
             subtitle: Text('${u.companyName ?? ''} | ${u.loginId ?? ''}'),
@@ -451,10 +451,10 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
           decoration: BoxDecoration(
             color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey[200]!),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
           ),
           child: DataTable(
-            headingRowColor: MaterialStateProperty.all(Colors.grey[50]),
+            headingRowColor: WidgetStateProperty.all(const Color(0xFFF8FAFC)),
             columns: const [
               DataColumn(label: Text('상태', style: TextStyle(fontWeight: FontWeight.bold))),
               DataColumn(label: Text('이름', style: TextStyle(fontWeight: FontWeight.bold))),

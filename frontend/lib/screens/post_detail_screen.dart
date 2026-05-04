@@ -867,10 +867,10 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                   horizontal: 12, vertical: 8),
                               margin: const EdgeInsets.only(bottom: 8, top: 4),
                               decoration: BoxDecoration(
-                                  color: Colors.grey[100],
-                                  border: Border(
+                                  color: const Color(0xFFF1F5F9),
+                                  border: const Border(
                                       left: BorderSide(
-                                          color: Colors.blue[300]!, width: 4)),
+                                          color: Color(0xFF1E40AF), width: 3)),
                                   borderRadius: const BorderRadius.only(
                                       topRight: Radius.circular(4),
                                       bottomRight: Radius.circular(4))),
@@ -987,7 +987,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               const SizedBox(width: 8),
               Container(
                 decoration: const BoxDecoration(
-                    shape: BoxShape.circle, color: Colors.blue),
+                    shape: BoxShape.circle,
+                    color: Color(0xFF1E40AF)),
                 child: IconButton(
                   icon: const Icon(LucideIcons.send,
                       color: Colors.white, size: 18),

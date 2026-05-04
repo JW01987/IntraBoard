@@ -79,8 +79,8 @@ class _CompanyManagementScreenState extends State<CompanyManagementScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey[300]!),
-                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<int>(
@@ -311,7 +311,7 @@ class _CompanyManagementScreenState extends State<CompanyManagementScreen> {
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: Colors.grey[300]!),
+            side: const BorderSide(color: Color(0xFFE2E8F0)),
           ),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
@@ -377,11 +377,11 @@ class _CompanyManagementScreenState extends State<CompanyManagementScreen> {
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: SingleChildScrollView(
         child: DataTable(
-          headingRowColor: MaterialStateProperty.all(Colors.grey[50]),
+          headingRowColor: WidgetStateProperty.all(const Color(0xFFF8FAFC)),
           columns: const [
             DataColumn(
                 label:

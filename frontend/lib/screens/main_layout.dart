@@ -36,7 +36,7 @@ class _WebLayout extends StatelessWidget {
           // Sidebar
           Container(
             width: 250,
-            color: Theme.of(context).cardColor,
+            color: Colors.white,
             child: Column(
               children: [
                 _buildHeader(context, user?.name, user?.companyName),
@@ -65,8 +65,6 @@ class _WebLayout extends StatelessWidget {
                             '/companies'),
                         _menuItem(context, '회원 관리', LucideIcons.users,
                             '/admin/users'),
-                        _menuItem(context, '시스템 설정', Icons.settings_outlined,
-                            '/admin/settings'),
                       ],
                     ],
                   ),
@@ -75,7 +73,7 @@ class _WebLayout extends StatelessWidget {
               ],
             ),
           ),
-          const VerticalDivider(width: 1),
+          const VerticalDivider(width: 1, color: Color(0xFFE2E8F0)),
           // Main Content
           Expanded(child: child),
         ],
@@ -191,19 +189,19 @@ class _MobileLayout extends StatelessWidget {
 // --- Common UI Components ---
 
 Widget _buildHeader(BuildContext context, String? name, String? company) {
+  final colorScheme = Theme.of(context).colorScheme;
   return Container(
     padding: const EdgeInsets.all(24),
     alignment: Alignment.centerLeft,
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Icon(LucideIcons.layoutDashboard,
-            size: 32, color: Color(0xFF1A73E8)),
+        Icon(LucideIcons.layoutDashboard, size: 32, color: colorScheme.primary),
         const SizedBox(height: 16),
         Text(name ?? '사용자님',
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         Text(company ?? '소속 정보 없음',
-            style: const TextStyle(color: Colors.grey, fontSize: 13)),
+            style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13)),
       ],
     ),
   );

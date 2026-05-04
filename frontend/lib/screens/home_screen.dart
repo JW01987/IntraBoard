@@ -97,11 +97,13 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('안녕하세요, ${user?.name ?? '사용자'}님! 👋',
-                style:
-                    const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            Text('안녕하세요, ${user?.name ?? '사용자'}님!',
+                style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1E293B))),
             const Text('오늘의 시스템 현황을 확인하세요.',
-                style: TextStyle(color: Colors.grey)),
+                style: TextStyle(color: Color(0xFF94A3B8))),
             const SizedBox(height: 32),
 
             // 1. 통계 카드 영역
@@ -217,9 +219,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 12),
                 Text(stat['value'] as String,
                     style: const TextStyle(
-                        fontSize: 22, fontWeight: FontWeight.bold)),
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1E293B))),
                 Text(stat['title'] as String,
-                    style: const TextStyle(color: Colors.grey, fontSize: 13)),
+                    style: const TextStyle(
+                        color: Color(0xFF94A3B8), fontSize: 13)),
               ],
             ),
           ),

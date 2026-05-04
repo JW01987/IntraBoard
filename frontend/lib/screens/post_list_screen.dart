@@ -233,10 +233,11 @@ class _PostListScreenState extends State<PostListScreen> {
                 const Text('내 담당만 보기'),
               ],
             ),
-          ElevatedButton.icon(
+          FilledButton.icon(
             onPressed: () => _fetchPosts(page: 1),
             icon: const Icon(LucideIcons.filter, size: 16),
             label: const Text('검색'),
+            style: FilledButton.styleFrom(minimumSize: const Size(80, 48)),
           ),
         ],
       ),
@@ -300,13 +301,7 @@ class _PostListScreenState extends State<PostListScreen> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            border: Border.all(color: const Color(0xFFE2E8F0)),
           ),
           child: ExpansionTile(
             shape: const RoundedRectangleBorder(side: BorderSide.none),
@@ -402,7 +397,7 @@ class _PostListScreenState extends State<PostListScreen> {
 
   TableRow _buildTableHeader() {
     return TableRow(
-      decoration: BoxDecoration(color: Colors.grey[100]),
+      decoration: const BoxDecoration(color: Color(0xFFF8FAFC)),
       children: const [
         Padding(
             padding: EdgeInsets.all(12),
