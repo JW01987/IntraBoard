@@ -18,23 +18,30 @@ Spring Boot 백엔드와 Flutter 프론트엔드로 구성된 풀스택 개인 �
 ## 스크린 샷
 
 ### 로그인
+#### 모바일
 > <img width="378" height="666" alt="Image" src="https://github.com/user-attachments/assets/69936f64-8394-4ead-9316-86cf16d451e7" />
+#### 데스크탑
 > <img width="1068" height="703" alt="Image" src="https://github.com/user-attachments/assets/f6dd4e07-d333-4f39-abef-c40861c7318b" />
 ### 대시보드 (홈화면)
+#### 모바일
 > <img width="372" height="666" alt="Image" src="https://github.com/user-attachments/assets/8d409520-81c5-48ae-87f6-e345c7d710f2" />
 > <img width="372" height="666" alt="Image" src="https://github.com/user-attachments/assets/dfeb4479-6d04-4dad-83e2-6ca1fac7f630" />
-><img width="1088" height="753" alt="Image" src="https://github.com/user-attachments/assets/da553bda-4274-4193-b23d-ede137b1c602" />
-> <img width="1088" height="753" alt="Image" src="https://github.com/user-attachments/assets/a034975c-794c-44be-95d8-099df6340d26" />
+#### 데스크탑
+> <img width="1343" height="702" alt="Image" src="https://github.com/user-attachments/assets/8c20bd7e-59d5-4c08-8eac-ad24ececc280" />
 
 ### 공지사항 게시판
+#### 모바일
 > <img width="372" height="666" alt="Image" src="https://github.com/user-attachments/assets/3d431b32-b8ca-45f1-b85e-bebc90de20d9" />
+#### 데스크탑
 > <img width="1088" height="753" alt="Image" src="https://github.com/user-attachments/assets/f7761040-d9f9-48eb-963b-9785d3447f94" />
 
 ### 이슈 게시판
+#### 데스크탑
 > <img width="1088" height="753" alt="Image" src="https://github.com/user-attachments/assets/c2ffb553-9293-4729-949a-ff8210bcc5ee" />
 > <img width="1088" height="753" alt="Image" src="https://github.com/user-attachments/assets/f1433a4d-7aa7-48bc-a99b-a5911d50090a" />
 > <img width="1088" height="753" alt="Image" src="https://github.com/user-attachments/assets/863445ce-d414-42a9-8d37-f93418318e2d" />
 ### 관리 화면
+#### 데스크탑
 > <img width="1088" height="753" alt="Image" src="https://github.com/user-attachments/assets/aa41c3e1-a380-40e4-a2ef-87ee569aa09a" />
 > <img width="1088" height="753" alt="Image" src="https://github.com/user-attachments/assets/49fb6431-e7c6-4391-b0e9-fb42cfe864a8" />
 
